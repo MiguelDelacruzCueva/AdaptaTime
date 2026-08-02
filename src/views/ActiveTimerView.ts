@@ -3,6 +3,7 @@ import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
 import { AudioService } from '../services/audio.service';
 import { Flow, Block, BlockType } from '../models/flow.model';
+import { TauriService } from '../services/tauri.service';
 
 export class ActiveTimerView {
   private static timerInterval: number | null = null;
@@ -158,17 +159,27 @@ export class ActiveTimerView {
         this.remainingSeconds--;
         this.updateClockUI(view);
       } else {
-        // Fin de un bloque
+        // 1. Obtener el bloque actual y el siguiente
         const completedBlock = this.currentFlow!.blocks[this.currentBlockIndex];
+        const nextBlock = this.currentFlow!.blocks[this.currentBlockIndex + 1];
+
+        // 2. Reproducir Sonido Sintético
         AudioService.playBlockEndSound(completedBlock.type);
 
+        // 3. 🔔 Lanza Notificación Nativa al SO
+        TauriService.notifyBlockFinished(
+          `¡Bloque de ${completedBlock.type.toLowerCase()} completado!`,
+          nextBlock 
+            ? `Siguiente: ${nextBlock.type} (${nextBlock.durationMinutes}m)` 
+            : '¡Has finalizado todo el flujo!'
+        );
+
+        // 4. Transición de bloques o finalización
         if (this.currentBlockIndex < this.currentFlow!.blocks.length - 1) {
-          // Avanza al siguiente bloque
           this.currentBlockIndex++;
           this.setupCurrentBlock();
           this.renderLayout(view, router);
         } else {
-          // Fin del flujo completo
           this.clearTimer();
           this.saveCompletedSession();
           alert('¡Flujo completado con éxito!');
@@ -177,6 +188,7 @@ export class ActiveTimerView {
       }
     }, 1000);
   }
+  
 
   private static updateClockUI(view: HTMLElement) {
     const elapsedSeconds = this.totalBlockSeconds - this.remainingSeconds;
