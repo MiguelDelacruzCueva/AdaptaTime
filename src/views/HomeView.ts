@@ -1,7 +1,7 @@
-// src/views/HomeView.ts
+// src/views/HomeView.ts (Reemplazar la clase completa)
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
-import { Flow } from '../models/flow.model';
+import { Flow, BlockType } from '../models/flow.model';
 
 export class HomeView {
   static render(router: AppRouter): HTMLElement {
@@ -12,14 +12,12 @@ export class HomeView {
     const flows = StorageService.getFlows();
     const userName = user ? user.name : 'Usuario';
 
-    // Determina el saludo según la hora local
     const hour = new Date().getHours();
     let greeting = 'BUENAS NOCHES';
     if (hour >= 6 && hour < 12) greeting = 'BUENOS DÍAS';
     else if (hour >= 12 && hour < 19) greeting = 'BUENAS TARDES';
 
     view.innerHTML = `
-      <!-- Barra superior con saludo e iconos de navegación -->
       <header class="top-bar">
         <div class="user-greeting">
           <span class="greeting-subtitle">${greeting}</span>
@@ -32,7 +30,6 @@ export class HomeView {
             </button>
           </div>
 
-          <!-- Modo Edición de Nombre oculto por defecto -->
           <div class="name-edit-form hidden" id="name-edit-container">
             <input type="text" id="input-edit-name" value="${userName}" class="serif-input" />
             <button class="icon-btn check-btn" id="btn-save-name">✓</button>
@@ -62,7 +59,6 @@ export class HomeView {
         </div>
       </header>
 
-      <!-- Contenido Principal: Lista de Flujos o Estado Vacío -->
       <main class="main-content">
         ${flows.length === 0 ? this.renderEmptyState() : this.renderFlowsList(flows)}
       </main>
@@ -102,28 +98,88 @@ export class HomeView {
           <button class="btn-text-gold" id="btn-create-flow">+ Nuevo</button>
         </div>
         <div class="flows-grid">
-          ${flows.map(f => `
-            <div class="flow-card" data-id="${f.id}">
-              <div class="flow-info">
-                <div class="flow-icon-bars">
-                  <span class="bar gold"></span>
-                  <span class="bar blue"></span>
-                </div>
-                <div class="flow-details">
-                  <h4 class="flow-title">${f.name}</h4>
-                  <span class="flow-meta">${f.blocks.length} bloques</span>
-                </div>
-              </div>
-              <button class="play-btn" data-play-id="${f.id}">▶</button>
-            </div>
-          `).join('')}
+          ${flows.map(f => this.renderFlowCard(f)).join('')}
         </div>
       </div>
     `;
   }
 
+  private static renderFlowCard(flow: Flow): string {
+    // 1. Calcular totales por categoría
+    const totals: Record<BlockType, number> = {
+      ENFOQUE: 0,
+      DESCANSO: 0,
+      MOVIMIENTO: 0,
+      PROCRASTINAR: 0
+    };
+
+    let totalMinutes = 0;
+    flow.blocks.forEach(b => {
+      totals[b.type] += b.durationMinutes;
+      totalMinutes += b.durationMinutes;
+    });
+
+    // 2. Construir la tira de micro-iconos (ej: ⚡ 10m  ☕ 5m)
+    const iconsMap: Record<BlockType, string> = {
+      ENFOQUE: '⚡',
+      DESCANSO: '☕',
+      MOVIMIENTO: '📈',
+      PROCRASTINAR: '🎮'
+    };
+
+    const breakdownHTML = (Object.keys(totals) as BlockType[])
+      .filter(type => totals[type] > 0)
+      .map(type => `
+        <span class="meta-item">
+          <span class="meta-icon">${iconsMap[type]}</span>
+          <span>${totals[type]}m</span>
+        </span>
+      `).join('');
+
+    // 3. Tiempo relativo ("Creado hace 0m")
+    const createdText = this.formatCreatedTime(flow.createdAt);
+
+    return `
+      <div class="flow-card" data-id="${flow.id}">
+        <div class="flow-info">
+          <!-- Barritas verticales a la izquierda -->
+          <div class="flow-icon-bars">
+            ${flow.blocks.map(b => `<span class="bar ${b.type.toLowerCase()}"></span>`).join('')}
+          </div>
+
+          <div class="flow-details">
+            <h4 class="flow-title">${flow.name}</h4>
+            <div class="flow-meta-row">
+              ${breakdownHTML}
+              <span class="created-at">${createdText}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-actions-right">
+          <span class="total-duration">${totalMinutes}m</span>
+          <button class="icon-btn delete-flow-btn" data-delete-id="${flow.id}" title="Eliminar flujo">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+          <button class="play-btn" data-play-id="${flow.id}">▶</button>
+        </div>
+      </div>
+    `;
+  }
+
+  private static formatCreatedTime(isoString?: string): string {
+    if (!isoString) return 'Creado recientemente';
+    const date = new Date(isoString);
+    const diffMin = Math.floor((new Date().getTime() - date.getTime()) / (1000 * 60));
+    if (diffMin < 1) return 'Creado hace 0m';
+    if (diffMin < 60) return `Creado hace ${diffMin}m`;
+    const diffHours = Math.floor(diffMin / 60);
+    return `Creado hace ${diffHours}h`;
+  }
+
   private static bindEvents(view: HTMLElement, router: AppRouter) {
-    // --- EDICIÓN DE NOMBRE ---
     const displayContainer = view.querySelector('#name-display-container')!;
     const editContainer = view.querySelector('#name-edit-container')!;
     const btnEdit = view.querySelector('#btn-edit-name')!;
@@ -160,16 +216,29 @@ export class HomeView {
       router.navigate('onboarding');
     });
 
-    // --- NAVEGACIÓN ---
+    // Navegación
     view.querySelector('#btn-nav-history')?.addEventListener('click', () => router.navigate('history'));
     view.querySelector('#btn-nav-calendar')?.addEventListener('click', () => router.navigate('calendar'));
     view.querySelector('#btn-create-flow')?.addEventListener('click', () => router.navigate('flow-editor'));
 
-    // Botones de Play para lanzar un flujo activo
+    // Botón Play
     view.querySelectorAll('[data-play-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
         router.navigate('active-timer', { flowId: id });
+      });
+    });
+
+    // Botón Eliminar Flujo
+    view.querySelectorAll('[data-delete-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-delete-id');
+        if (id && confirm('¿Deseas eliminar este flujo?')) {
+          const flows = StorageService.getFlows().filter(f => f.id !== id);
+          localStorage.setItem('focus_flow_flows', JSON.stringify(flows));
+          router.navigate('home');
+        }
       });
     });
   }

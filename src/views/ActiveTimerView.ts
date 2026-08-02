@@ -1,22 +1,244 @@
 // src/views/ActiveTimerView.ts
 import { AppRouter } from '../app';
+import { StorageService } from '../services/storage.service';
+import { AudioService } from '../services/audio.service';
+import { Flow, Block, BlockType } from '../models/flow.model';
 
 export class ActiveTimerView {
+  private static timerInterval: number | null = null;
+  private static currentFlow: Flow | null = null;
+  private static currentBlockIndex: number = 0;
+  private static remainingSeconds: number = 0;
+  private static totalBlockSeconds: number = 0;
+  private static isPaused: boolean = false;
+
   static render(router: AppRouter, params: Record<string, unknown> = {}): HTMLElement {
     const view = document.createElement('div');
-    view.className = 'active-timer-container';
+    view.className = 'timer-container';
+
+    const flowId = params.flowId as string;
+    const flows = StorageService.getFlows();
+    this.currentFlow = flows.find(f => f.id === flowId) || null;
+
+    if (!this.currentFlow || this.currentFlow.blocks.length === 0) {
+      alert('Flujo no encontrado o sin bloques.');
+      router.navigate('home');
+      return view;
+    }
+
+    // Inicializa en el primer bloque
+    this.currentBlockIndex = 0;
+    this.isPaused = false;
+    this.setupCurrentBlock();
+
+    this.renderLayout(view, router);
+    this.startTimer(view, router);
+
+    return view;
+  }
+
+  private static setupCurrentBlock() {
+    if (!this.currentFlow) return;
+    const block = this.currentFlow.blocks[this.currentBlockIndex];
+    this.totalBlockSeconds = block.durationMinutes * 60;
+    this.remainingSeconds = this.totalBlockSeconds;
+  }
+
+  private static renderLayout(view: HTMLElement, router: AppRouter) {
+    if (!this.currentFlow) return;
+
+    const currentBlock = this.currentFlow.blocks[this.currentBlockIndex];
+    const nextBlock = this.currentFlow.blocks[this.currentBlockIndex + 1];
+
+    const typeNames: Record<BlockType, string> = {
+      ENFOQUE: 'Enfoque',
+      DESCANSO: 'Descanso',
+      MOVIMIENTO: 'Movimiento',
+      PROCRASTINAR: 'Procrastinar'
+    };
+
+    const typeIcons: Record<BlockType, string> = {
+      ENFOQUE: '⚡',
+      DESCANSO: '☕',
+      MOVIMIENTO: '📈',
+      PROCRASTINAR: '🎮'
+    };
+
+    // Cálculo del ángulo de la aguja (0 a 360 grados)
+    const elapsedSeconds = this.totalBlockSeconds - this.remainingSeconds;
+    const rotationDegrees = (elapsedSeconds / this.totalBlockSeconds) * 360;
+
+    const minutes = Math.floor(this.remainingSeconds / 60).toString().padStart(2, '0');
+    const seconds = (this.remainingSeconds % 60).toString().padStart(2, '0');
+
     view.innerHTML = `
-      <div style="padding: 2rem; text-align: center;">
-        <h2 class="serif-title">Temporizador Activo</h2>
-        <p>Flujo ID: ${params.flowId || 'Sin ID'}</p>
-        <button id="btn-back-home" class="btn-gold-pill">← Volver al Home</button>
+      <!-- Título Superior y Puntos de Progreso -->
+      <header class="timer-header">
+        <span class="flow-title-upper">${this.currentFlow.name.toUpperCase()}</span>
+        <div class="block-dots">
+          ${this.currentFlow.blocks.map((b, idx) => `
+            <span class="dot ${b.type.toLowerCase()} ${idx === this.currentBlockIndex ? 'active' : ''}"></span>
+          `).join('')}
+        </div>
+      </header>
+
+      <!-- Reloj Circular y Aguja Dinámica -->
+      <main class="clock-stage">
+        <div class="circle-clock ${currentBlock.type.toLowerCase()}">
+          <div class="clock-face">
+            <span class="mark m-12"></span>
+            <span class="mark m-3"></span>
+            <span class="mark m-6"></span>
+            <span class="mark m-9"></span>
+          </div>
+
+          <!-- Aguja con rotación dinámica -->
+          <div class="needle-wrapper" style="transform: rotate(${rotationDegrees}deg);">
+            <div class="needle-hand"></div>
+          </div>
+
+          <!-- Tiempo digital central -->
+          <div class="center-time-display">
+            <span class="block-type-icon">${typeIcons[currentBlock.type]}</span>
+            <h1 class="time-digital">${minutes}:${seconds}</h1>
+            <span class="block-type-name">${typeNames[currentBlock.type]}</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- Botones de Control -->
+      <footer class="timer-controls">
+        <button class="control-btn square-btn" id="btn-stop" title="Detener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="5" y="5" width="14" height="14" rx="2" />
+          </svg>
+        </button>
+
+        <button class="control-btn play-pause-btn" id="btn-toggle-pause">
+          ${this.isPaused ? `
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          ` : `
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          `}
+        </button>
+
+        <button class="control-btn skip-btn" id="btn-skip" title="Siguiente bloque">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
+          </svg>
+        </button>
+      </footer>
+
+      <!-- Indicador de Bloque Siguiente -->
+      <div class="next-block-preview">
+        ${nextBlock ? `
+          Siguiente: <span>${typeIcons[nextBlock.type]} ${typeNames[nextBlock.type]} ${nextBlock.durationMinutes}m</span>
+        ` : `
+          <span>Último bloque del flujo</span>
+        `}
       </div>
     `;
 
-    view.querySelector('#btn-back-home')?.addEventListener('click', () => {
-      router.navigate('home');
+    this.bindEvents(view, router);
+  }
+
+  private static startTimer(view: HTMLElement, router: AppRouter) {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+
+    this.timerInterval = window.setInterval(() => {
+      if (this.isPaused) return;
+
+      if (this.remainingSeconds > 0) {
+        this.remainingSeconds--;
+        this.updateClockUI(view);
+      } else {
+        // Fin de un bloque
+        const completedBlock = this.currentFlow!.blocks[this.currentBlockIndex];
+        AudioService.playBlockEndSound(completedBlock.type);
+
+        if (this.currentBlockIndex < this.currentFlow!.blocks.length - 1) {
+          // Avanza al siguiente bloque
+          this.currentBlockIndex++;
+          this.setupCurrentBlock();
+          this.renderLayout(view, router);
+        } else {
+          // Fin del flujo completo
+          this.clearTimer();
+          this.saveCompletedSession();
+          alert('¡Flujo completado con éxito!');
+          router.navigate('history');
+        }
+      }
+    }, 1000);
+  }
+
+  private static updateClockUI(view: HTMLElement) {
+    const elapsedSeconds = this.totalBlockSeconds - this.remainingSeconds;
+    const rotationDegrees = (elapsedSeconds / this.totalBlockSeconds) * 360;
+
+    const minutes = Math.floor(this.remainingSeconds / 60).toString().padStart(2, '0');
+    const seconds = (this.remainingSeconds % 60).toString().padStart(2, '0');
+
+    const digital = view.querySelector('.time-digital');
+    const needle = view.querySelector('.needle-wrapper') as HTMLElement;
+
+    if (digital) digital.textContent = `${minutes}:${seconds}`;
+    if (needle) needle.style.transform = `rotate(${rotationDegrees}deg)`;
+  }
+
+  private static bindEvents(view: HTMLElement, router: AppRouter) {
+    // Alternar Pausa
+    view.querySelector('#btn-toggle-pause')?.addEventListener('click', () => {
+      this.isPaused = !this.isPaused;
+      this.renderLayout(view, router);
     });
 
-    return view;
+    // Saltar Bloque
+    view.querySelector('#btn-skip')?.addEventListener('click', () => {
+      if (this.currentFlow && this.currentBlockIndex < this.currentFlow.blocks.length - 1) {
+        this.currentBlockIndex++;
+        this.setupCurrentBlock();
+        this.renderLayout(view, router);
+      } else {
+        this.clearTimer();
+        this.saveCompletedSession();
+        router.navigate('history');
+      }
+    });
+
+    // Detener y Salir al Home
+    view.querySelector('#btn-stop')?.addEventListener('click', () => {
+      this.clearTimer();
+      router.navigate('home');
+    });
+  }
+
+  private static clearTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  private static saveCompletedSession() {
+    if (!this.currentFlow) return;
+
+    const totalMin = this.currentFlow.blocks.reduce((acc, b) => acc + b.durationMinutes, 0);
+
+    StorageService.addHistoryEntry({
+      id: crypto.randomUUID(),
+      flowId: this.currentFlow.id,
+      flowName: this.currentFlow.name,
+      totalDurationMinutes: totalMin,
+      completedBlocks: this.currentFlow.blocks.length,
+      totalBlocks: this.currentFlow.blocks.length,
+      completedAt: new Date().toISOString()
+    });
   }
 }
