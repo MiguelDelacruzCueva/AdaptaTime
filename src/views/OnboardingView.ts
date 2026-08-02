@@ -33,15 +33,17 @@ export class OnboardingView {
     const input = view.querySelector('#username') as HTMLInputElement;
     const btn = view.querySelector('#btn-start') as HTMLButtonElement;
 
-    const handleStart = () => {
-      const name = input.value.trim();
-      if (name) {
-        StorageService.saveUser(name);
-        router.navigate('home');
-      } else {
-        input.focus();
-      }
-    };
+    const handleStart = (e?: Event) => {
+  if (e) e.preventDefault(); // 👈 EVITA LA RECARGA DE PÁGINA
+
+  const name = input.value.trim();
+  if (name) {
+    StorageService.saveUser(name);
+    router.navigate('home'); // Realiza el cambio de vista
+  } else {
+    input.focus();
+  }
+};
 
     btn.addEventListener('click', handleStart);
     input.addEventListener('keydown', (e) => {
