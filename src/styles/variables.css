@@ -1,0 +1,21 @@
+/* src/styles/variables.css */
+:root {
+  /* Paleta oficial de acciones */
+  --color-enfoque: #988156;       /* Café / Dorado */
+  --color-descanso: #578C99;      /* Azul Azulejo */
+  --color-movimiento: #6D945B;    /* Verde Olivo */
+  --color-procrastinar: #834749;  /* Rosa / Rojo Quemado */
+
+  /* Tema General */
+  --bg-main: #0a0a0c;
+  --bg-card: #121214;
+  --bg-card-hover: #19191c;
+  --border-card: #1f1f24;
+  --text-main: #f4f4f5;
+  --text-muted: #71717a;
+  --text-subtle: #4b4b52;
+
+  /* Fuentes */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Georgia', 'Times New Roman', serif;
+}

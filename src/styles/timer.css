@@ -1,0 +1,212 @@
+/* src/styles/timer.css */
+
+/* Contenedor Principal Adaptable */
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100vh;
+  padding: clamp(1rem, 4vh, 2.5rem) 1.5rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Header: Título del Flujo y Puntos de Progreso */
+.timer-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.flow-title-upper {
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.block-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.block-dots .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #26262b;
+  transition: all 0.3s ease;
+}
+
+.block-dots .dot.active {
+  transform: scale(1.3);
+}
+
+.block-dots .dot.enfoque.active { background-color: var(--color-enfoque); }
+.block-dots .dot.descanso.active { background-color: var(--color-descanso); }
+.block-dots .dot.movimiento.active { background-color: var(--color-movimiento); }
+.block-dots .dot.procrastinar.active { background-color: var(--color-procrastinar); }
+
+/* Reloj Circular Principal */
+.clock-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+}
+
+.circle-clock {
+  position: relative;
+  /* Se adapta dinámicamente según el alto/ancho de la ventana */
+  width: clamp(210px, 38vh, 310px);
+  height: clamp(210px, 38vh, 310px);
+  border-radius: 50%;
+  border: 1px solid #1a1a1e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* SVG de Marcas (Ticks) alrededor del reloj */
+.ticks-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Aguja Dinámica y Arco */
+.needle-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.needle-hand {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  width: 2px;
+  height: 40%;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  border-radius: 2px;
+}
+
+.circle-clock.enfoque .needle-hand { background: linear-gradient(to top, transparent, var(--color-enfoque)); }
+.circle-clock.descanso .needle-hand { background: linear-gradient(to top, transparent, var(--color-descanso)); }
+.circle-clock.movimiento .needle-hand { background: linear-gradient(to top, transparent, var(--color-movimiento)); }
+.circle-clock.procrastinar .needle-hand { background: linear-gradient(to top, transparent, var(--color-procrastinar)); }
+
+/* Información Central del Reloj */
+.center-time-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  z-index: 2;
+}
+
+.block-type-icon {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.time-digital {
+  font-family: var(--font-sans);
+  font-size: clamp(2.4rem, 6vh, 3.4rem);
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1;
+}
+
+.block-type-name {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Controles Inferiores (Stop, Play/Pause, Skip) */
+.timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.control-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+  color: var(--text-main);
+}
+
+.side-btn {
+  width: 38px;
+  height: 38px;
+}
+
+/* Botón Central Circular Principal */
+.play-pause-btn {
+  width: clamp(52px, 8vh, 64px);
+  height: clamp(52px, 8vh, 64px);
+  border-radius: 50%;
+  background-color: #1a1712;
+  border: 1px solid var(--color-enfoque);
+  color: var(--color-enfoque);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.play-pause-btn:hover {
+  transform: scale(1.06);
+  background-color: var(--color-enfoque);
+  color: #000;
+}
+
+/* Vista Previa del Siguiente Bloque */
+.next-block-preview {
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.next-block-preview span {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* --- AJUSTES PARA VENTANAS PEQUEÑAS / MODOS WIDGET --- */
+@media (max-height: 520px) {
+  .timer-container {
+    padding: 0.8rem;
+  }
+  .flow-title-upper {
+    font-size: 0.65rem;
+  }
+  .timer-controls {
+    margin-bottom: 0.3rem;
+    gap: 1.2rem;
+  }
+}

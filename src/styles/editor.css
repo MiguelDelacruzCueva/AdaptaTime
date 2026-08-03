@@ -1,0 +1,256 @@
+/* src/styles/editor.css */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 2.5rem 3rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-card);
+  margin-bottom: 1.5rem;
+}
+
+.header-title-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+/* Input elegante para el Nombre del Flujo */
+.flow-title-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-card);
+  color: var(--text-main);
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  outline: none;
+  padding: 0.2rem 0.5rem;
+  width: 100%;
+  max-width: 450px;
+  transition: border-color 0.2s;
+}
+
+.flow-title-input:focus {
+  border-color: var(--color-enfoque);
+}
+
+.flow-title-input::placeholder {
+  color: var(--text-subtle);
+}
+
+.editor-actions-top {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.total-flow-duration {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+/* Botón Guardar en forma de Píldora */
+.btn-gold-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--color-enfoque);
+  color: var(--color-enfoque);
+  padding: 0.6rem 1.4rem;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.btn-gold-pill:hover {
+  background: var(--color-enfoque);
+  color: #000;
+}
+
+.editor-body {
+  display: flex;
+  flex: 1;
+  gap: 2.5rem;
+  overflow: hidden;
+}
+
+/* Panel Lateral de Bloques */
+.block-selector-sidebar {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  flex-shrink: 0;
+}
+
+.sidebar-subtitle {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.block-preset-card {
+  background-color: var(--bg-card);
+  padding: 1rem;
+  border-radius: 14px;
+  cursor: pointer;
+  border: 1px solid var(--border-card);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.block-preset-card:hover {
+  background-color: var(--bg-card-hover);
+  border-color: #333;
+  transform: translateY(-2px);
+}
+
+.preset-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.preset-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Lista de Bloques en la Secuencia */
+.sequence-editor-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.blocks-sequence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.block-item-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-card);
+  padding: 0.9rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid var(--border-card);
+}
+
+.block-item-card.enfoque { border-left: 4px solid var(--color-enfoque); }
+.block-item-card.descanso { border-left: 4px solid var(--color-descanso); }
+.block-item-card.movimiento { border-left: 4px solid var(--color-movimiento); }
+.block-item-card.procrastinar { border-left: 4px solid var(--color-procrastinar); }
+
+.block-left-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.block-index-number {
+  font-size: 0.85rem;
+  color: var(--text-subtle);
+  font-weight: 600;
+}
+
+.block-name-type {
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.block-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Controles de duracion (+ / -) integrados */
+.duration-adjuster {
+  display: flex;
+  align-items: center;
+  background-color: #0d0d10;
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.btn-adjust {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-adjust:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-main);
+}
+
+.duration-value-text {
+  padding: 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.btn-delete-block {
+  color: var(--text-subtle);
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  transition: color 0.2s;
+}
+
+.btn-delete-block:hover {
+  color: var(--color-procrastinar);
+}
+
+.timeline-bar-preview {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background-color: #1c1c1f;
+  margin-top: 1rem;
+}
+
+.timeline-bar-preview .segment.enfoque { background-color: var(--color-enfoque); }
+.timeline-bar-preview .segment.descanso { background-color: var(--color-descanso); }
+.timeline-bar-preview .segment.movimiento { background-color: var(--color-movimiento); }
+.timeline-bar-preview .segment.procrastinar { background-color: var(--color-procrastinar); }
