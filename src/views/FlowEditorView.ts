@@ -1,47 +1,53 @@
 // src/views/FlowEditorView.ts
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
-import { Flow, Block, BlockType } from '../models/flow.model';
+import { Block, BlockType, Flow } from '../models/flow.model';
 
 export class FlowEditorView {
-  private static currentBlocks: Block[] = [];
   private static flowName: string = '';
+  private static blocks: Block[] = [];
+  private static editingFlowId: string | null = null;
 
   static render(router: AppRouter, params: Record<string, unknown> = {}): HTMLElement {
     const view = document.createElement('div');
     view.className = 'editor-container';
 
-    // Si pasamos un flowId en params, editamos un flujo existente; si no, creamos uno nuevo con un bloque por defecto.
-    const flowId = params.flowId as string | undefined;
-    if (flowId) {
-      const existing = StorageService.getFlows().find(f => f.id === flowId);
-      if (existing) {
-        this.flowName = existing.name;
-        this.currentBlocks = [...existing.blocks];
+    // Si viene flowId, estamos en MODO EDICIÓN
+    this.editingFlowId = (params.flowId as string) || null;
+    if (this.editingFlowId) {
+      const flow = StorageService.getFlows().find(f => f.id === this.editingFlowId);
+      if (flow) {
+        this.flowName = flow.name;
+        this.blocks = [...flow.blocks];
       }
     } else {
+      // Modo Creación Limpio (incluyendo posición obligatoria)
       this.flowName = '';
-      this.currentBlocks = [
-        { id: crypto.randomUUID(), type: 'ENFOQUE', durationMinutes: 25, position: 1 }
+      this.blocks = [
+        { id: FlowEditorView.generateId(), type: 'ENFOQUE' as BlockType, durationMinutes: 25, position: 0 },
+        { id: FlowEditorView.generateId(), type: 'DESCANSO' as BlockType, durationMinutes: 5, position: 1 }
       ];
     }
 
-    this.updateView(view, router, flowId);
+    this.renderContent(view, router);
     return view;
   }
 
-  private static calculateTotalMinutes(): number {
-    return this.currentBlocks.reduce((acc, b) => acc + b.durationMinutes, 0);
-  }
+  private static renderContent(view: HTMLElement, router: AppRouter) {
+    const totalMinutes = this.blocks.reduce((acc, b) => acc + b.durationMinutes, 0);
 
-  private static updateView(view: HTMLElement, router: AppRouter, editingId?: string) {
-    const totalMinutes = this.calculateTotalMinutes();
+    const iconsMap: Record<BlockType, string> = {
+      ENFOQUE: '⚡',
+      DESCANSO: '☕',
+      MOVIMIENTO: '📈',
+      PROCRASTINAR: '🎮'
+    };
 
     view.innerHTML = `
-      <!-- Topbar del Editor -->
+      <!-- Encabezado con Input Elegante -->
       <header class="editor-header">
-        <div class="header-left">
-          <button class="icon-btn" id="btn-back" title="Volver">
+        <div class="header-title-input-wrapper">
+          <button class="icon-btn" id="btn-back-home" title="Volver al inicio">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
@@ -49,194 +55,200 @@ export class FlowEditorView {
           <input 
             type="text" 
             id="input-flow-name" 
-            class="flow-name-input serif-title" 
-            placeholder="Nombre del flujo"
+            class="flow-title-input" 
+            placeholder="Nombre del flujo" 
             value="${this.flowName}" 
+            autocomplete="off"
           />
         </div>
-        <div class="header-right">
-          <span class="total-time-badge">${totalMinutes}m total</span>
-          <button class="btn-save" id="btn-save-flow">
+
+        <div class="editor-actions-top">
+          <span class="total-flow-duration">${totalMinutes}m total</span>
+          <button class="btn-gold-pill" id="btn-save-flow">
             ✓ Guardar
           </button>
         </div>
       </header>
 
-      <!-- Cuerpo del Editor: Panel Lateral + Secuencia de Bloques -->
-      <div class="editor-body">
-        <!-- Panel de Selección de Tipo de Bloque -->
+      <main class="editor-body">
+        <!-- Sidebar de Presets -->
         <aside class="block-selector-sidebar">
-          <span class="sidebar-title">TIPO DE BLOQUE</span>
-          
-          <div class="block-preset-card" data-add-type="ENFOQUE">
-            <div class="preset-header">
-              <span class="icon gold">⚡</span>
-              <div>
-                <h4>Enfoque</h4>
-                <span class="subtext">25m por defecto</span>
-              </div>
-            </div>
+          <span class="sidebar-subtitle">TIPO DE BLOQUE</span>
+
+          <div class="block-preset-card" data-type="ENFOQUE">
+            <h4 class="preset-title">⚡ Enfoque</h4>
+            <span class="preset-desc">25m por defecto</span>
           </div>
 
-          <div class="block-preset-card" data-add-type="DESCANSO">
-            <div class="preset-header">
-              <span class="icon blue">☕</span>
-              <div>
-                <h4>Descanso</h4>
-                <span class="subtext">5m por defecto</span>
-              </div>
-            </div>
+          <div class="block-preset-card" data-type="DESCANSO">
+            <h4 class="preset-title">☕ Descanso</h4>
+            <span class="preset-desc">5m por defecto</span>
           </div>
 
-          <div class="block-preset-card" data-add-type="MOVIMIENTO">
-            <div class="preset-header">
-              <span class="icon green">📈</span>
-              <div>
-                <h4>Movimiento</h4>
-                <span class="subtext">10m por defecto</span>
-              </div>
-            </div>
+          <div class="block-preset-card" data-type="MOVIMIENTO">
+            <h4 class="preset-title">📈 Movimiento</h4>
+            <span class="preset-desc">10m por defecto</span>
           </div>
 
-          <div class="block-preset-card" data-add-type="PROCRASTINAR">
-            <div class="preset-header">
-              <span class="icon rose">🎮</span>
-              <div>
-                <h4>Procrastinar</h4>
-                <span class="subtext">15m por defecto</span>
-              </div>
-            </div>
+          <div class="block-preset-card" data-type="PROCRASTINAR">
+            <h4 class="preset-title">🎮 Procrastinar</h4>
+            <span class="preset-desc">15m por defecto</span>
           </div>
         </aside>
 
-        <!-- Lista Interactiva de Bloques Agregados -->
-        <main class="blocks-timeline">
-          <div class="blocks-list">
-            ${this.currentBlocks.map((block, idx) => this.renderBlockItem(block, idx + 1)).join('')}
-          </div>
+        <!-- Área de Secuencia de Bloques -->
+        <section class="sequence-editor-area">
+          <div class="blocks-sequence-list">
+            ${this.blocks.map((b, idx) => `
+              <div class="block-item-card ${b.type.toLowerCase()}" data-block-id="${b.id}">
+                <div class="block-left-info">
+                  <!-- Botones de Reordenar (Arriba / Abajo) -->
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <button class="icon-btn btn-move-up" data-idx="${idx}" ${idx === 0 ? 'disabled style="opacity:0.2;"' : ''}>▲</button>
+                    <button class="icon-btn btn-move-down" data-idx="${idx}" ${idx === this.blocks.length - 1 ? 'disabled style="opacity:0.2;"' : ''}>▼</button>
+                  </div>
+                  <span class="block-index-number">${idx + 1}</span>
+                  <span class="block-name-type">${iconsMap[b.type]} ${b.type.charAt(0) + b.type.slice(1).toLowerCase()}</span>
+                </div>
 
-          <!-- Barra de progreso visual por colores (Timeline preview) -->
-          <div class="timeline-bar-preview">
-            ${this.currentBlocks.map(b => `
-              <div 
-                class="segment ${b.type.toLowerCase()}" 
-                style="flex: ${b.durationMinutes};"
-                title="${b.type}: ${b.durationMinutes}m"
-              ></div>
+                <div class="block-controls-right">
+                  <div class="duration-adjuster">
+                    <button class="btn-adjust btn-minus" data-id="${b.id}">-</button>
+                    <span class="duration-value-text">${b.durationMinutes}m</span>
+                    <button class="btn-adjust btn-plus" data-id="${b.id}">+</button>
+                  </div>
+                  <button class="btn-delete-block" data-id="${b.id}" title="Eliminar bloque">🗑️</button>
+                </div>
+              </div>
             `).join('')}
           </div>
-        </main>
-      </div>
+
+          <!-- Línea visual preview -->
+          <div class="timeline-bar-preview">
+            ${this.blocks.map(b => `<div class="segment ${b.type.toLowerCase()}" style="flex: ${b.durationMinutes}"></div>`).join('')}
+          </div>
+        </section>
+      </main>
     `;
 
-    this.bindEvents(view, router, editingId);
+    this.bindEvents(view, router);
   }
 
-  private static renderBlockItem(block: Block, index: number): string {
-    const typeNames: Record<BlockType, string> = {
-      ENFOQUE: 'Enfoque',
-      DESCANSO: 'Descanso',
-      MOVIMIENTO: 'Movimiento',
-      PROCRASTINAR: 'Procrastinar'
-    };
-
-    const typeIcons: Record<BlockType, string> = {
-      ENFOQUE: '⚡',
-      DESCANSO: '☕',
-      MOVIMIENTO: '📈',
-      PROCRASTINAR: '🎮'
-    };
-
-    return `
-      <div class="block-item-card ${block.type.toLowerCase()}" data-block-id="${block.id}">
-        <div class="block-left">
-          <span class="block-number">${index}</span>
-          <span class="block-icon">${typeIcons[block.type]}</span>
-          <span class="block-label">${typeNames[block.type]}</span>
-        </div>
-        <div class="block-controls">
-          <button class="step-btn" data-action="decrement" data-id="${block.id}">-</button>
-          <span class="duration-display">${block.durationMinutes}m</span>
-          <button class="step-btn" data-action="increment" data-id="${block.id}">+</button>
-          <button class="icon-btn delete-btn" data-action="delete" data-id="${block.id}" title="Eliminar">🗑️</button>
-        </div>
-      </div>
-    `;
-  }
-
-  private static bindEvents(view: HTMLElement, router: AppRouter, editingId?: string) {
+  private static bindEvents(view: HTMLElement, router: AppRouter) {
     const nameInput = view.querySelector('#input-flow-name') as HTMLInputElement;
-
-    nameInput.addEventListener('input', () => {
-      this.flowName = nameInput.value;
+    nameInput?.addEventListener('input', (e) => {
+      this.flowName = (e.target as HTMLInputElement).value;
     });
 
-    // Volver atrás
-    view.querySelector('#btn-back')?.addEventListener('click', () => {
-      router.navigate('home');
-    });
-
-    // Añadir nuevo bloque desde la barra lateral
-    view.querySelectorAll('[data-add-type]').forEach(card => {
-      card.addEventListener('click', (e) => {
-        const type = (e.currentTarget as HTMLElement).getAttribute('data-add-type') as BlockType;
-        const defaultDurations: Record<BlockType, number> = {
-          ENFOQUE: 25,
-          DESCANSO: 5,
-          MOVIMIENTO: 10,
-          PROCRASTINAR: 15
-        };
-
-        this.currentBlocks.push({
-          id: crypto.randomUUID(),
-          type,
-          durationMinutes: defaultDurations[type],
-          position: this.currentBlocks.length + 1
-        });
-
-        this.updateView(view, router, editingId);
-      });
-    });
-
-    // Incrementar, Decrementar o Eliminar Bloque
-    view.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const action = (e.currentTarget as HTMLElement).getAttribute('data-action');
-        const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
-        const targetBlock = this.currentBlocks.find(b => b.id === id);
-
-        if (!targetBlock) return;
-
-        if (action === 'increment') {
-          targetBlock.durationMinutes += 1;
-        } else if (action === 'decrement' && targetBlock.durationMinutes > 1) {
-          targetBlock.durationMinutes -= 1;
-        } else if (action === 'delete') {
-          this.currentBlocks = this.currentBlocks.filter(b => b.id !== id);
-        }
-
-        this.updateView(view, router, editingId);
-      });
-    });
+    view.querySelector('#btn-back-home')?.addEventListener('click', () => router.navigate('home'));
 
     // Guardar Flujo
     view.querySelector('#btn-save-flow')?.addEventListener('click', () => {
-      const finalName = this.flowName.trim() || 'Flujo sin nombre';
-
-      if (this.currentBlocks.length === 0) {
-        alert('Añade al menos un bloque al flujo.');
+      if (!this.flowName.trim()) {
+        alert('Por favor ponle un nombre a tu flujo.');
+        return;
+      }
+      if (this.blocks.length === 0) {
+        alert('Agrega al menos un bloque al flujo.');
         return;
       }
 
-      const flowToSave: Flow = {
-        id: editingId || crypto.randomUUID(),
-        name: finalName,
-        blocks: this.currentBlocks.map((b, idx) => ({ ...b, position: idx + 1 })),
+      const flowData: Flow = {
+        id: this.editingFlowId || crypto.randomUUID(),
+        name: this.flowName.trim(),
+        blocks: this.blocks,
         createdAt: new Date().toISOString()
       };
 
-      StorageService.saveFlow(flowToSave);
+      StorageService.saveFlow(flowData);
       router.navigate('home');
     });
+
+    // Agregar Bloques desde la Barra Lateral
+    view.querySelectorAll('.block-preset-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const type = card.getAttribute('data-type') as BlockType;
+        const defaultMin: Record<BlockType, number> = { 
+          ENFOQUE: 25, 
+          DESCANSO: 5, 
+          MOVIMIENTO: 10, 
+          PROCRASTINAR: 15 
+        };
+
+        const newBlock: Block = {
+          id: FlowEditorView.generateId(),
+          type: type,
+          durationMinutes: defaultMin[type] || 15,
+          position: this.blocks.length
+        };
+
+        this.blocks.push(newBlock);
+        this.renderContent(view, router);
+      });
+    });
+
+    // Ajustar Duración (+ / -)
+    view.querySelectorAll('.btn-minus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
+        const block = this.blocks.find(b => b.id === id);
+        if (block && block.durationMinutes > 1) {
+          block.durationMinutes--;
+          this.renderContent(view, router);
+        }
+      });
+    });
+
+    view.querySelectorAll('.btn-plus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
+        const block = this.blocks.find(b => b.id === id);
+        if (block) {
+          block.durationMinutes++;
+          this.renderContent(view, router);
+        }
+      });
+    });
+
+    // Reordenar Bloques (Arriba / Abajo)
+    view.querySelectorAll('.btn-move-up').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt((e.currentTarget as HTMLElement).getAttribute('data-idx') || '0');
+        if (idx > 0) {
+          const temp = this.blocks[idx];
+          this.blocks[idx] = this.blocks[idx - 1];
+          this.blocks[idx - 1] = temp;
+          this.renderContent(view, router);
+        }
+      });
+    });
+
+    view.querySelectorAll('.btn-move-down').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt((e.currentTarget as HTMLElement).getAttribute('data-idx') || '0');
+        if (idx < this.blocks.length - 1) {
+          const temp = this.blocks[idx];
+          this.blocks[idx] = this.blocks[idx + 1];
+          this.blocks[idx + 1] = temp;
+          this.renderContent(view, router);
+        }
+      });
+    });
+
+    // Eliminar Bloque
+    view.querySelectorAll('.btn-delete-block').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
+        this.blocks = this.blocks.filter(b => b.id !== id);
+        this.renderContent(view, router);
+      });
+    });
+    
+  }
+  private static generateId(): string {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    return `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }

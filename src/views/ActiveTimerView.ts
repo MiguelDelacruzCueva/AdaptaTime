@@ -2,8 +2,8 @@
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
 import { AudioService } from '../services/audio.service';
-import { Flow, Block, BlockType } from '../models/flow.model';
 import { TauriService } from '../services/tauri.service';
+import { Flow, BlockType } from '../models/flow.model';
 
 export class ActiveTimerView {
   private static timerInterval: number | null = null;
@@ -22,12 +22,11 @@ export class ActiveTimerView {
     this.currentFlow = flows.find(f => f.id === flowId) || null;
 
     if (!this.currentFlow || this.currentFlow.blocks.length === 0) {
-      alert('Flujo no encontrado o sin bloques.');
+      alert('Flujo no encontrado.');
       router.navigate('home');
       return view;
     }
 
-    // Inicializa en el primer bloque
     this.currentBlockIndex = 0;
     this.isPaused = false;
     this.setupCurrentBlock();
@@ -65,7 +64,6 @@ export class ActiveTimerView {
       PROCRASTINAR: '🎮'
     };
 
-    // Cálculo del ángulo de la aguja (0 a 360 grados)
     const elapsedSeconds = this.totalBlockSeconds - this.remainingSeconds;
     const rotationDegrees = (elapsedSeconds / this.totalBlockSeconds) * 360;
 
@@ -73,9 +71,8 @@ export class ActiveTimerView {
     const seconds = (this.remainingSeconds % 60).toString().padStart(2, '0');
 
     view.innerHTML = `
-      <!-- Título Superior y Puntos de Progreso -->
       <header class="timer-header">
-        <span class="flow-title-upper">${this.currentFlow.name.toUpperCase()}</span>
+        <span class="flow-title-upper">FLUJO — ${this.currentFlow.name}</span>
         <div class="block-dots">
           ${this.currentFlow.blocks.map((b, idx) => `
             <span class="dot ${b.type.toLowerCase()} ${idx === this.currentBlockIndex ? 'active' : ''}"></span>
@@ -83,22 +80,22 @@ export class ActiveTimerView {
         </div>
       </header>
 
-      <!-- Reloj Circular y Aguja Dinámica -->
       <main class="clock-stage">
         <div class="circle-clock ${currentBlock.type.toLowerCase()}">
-          <div class="clock-face">
-            <span class="mark m-12"></span>
-            <span class="mark m-3"></span>
-            <span class="mark m-6"></span>
-            <span class="mark m-9"></span>
-          </div>
+          <!-- Marcas Ticks Alrededor del Esfera -->
+          <svg class="ticks-svg" viewBox="0 0 100 100">
+            ${Array.from({ length: 12 }).map((_, i) => {
+              const angle = i * 30;
+              return `<line x1="50" y1="6" x2="50" y2="9" stroke="#2a2a30" stroke-width="1" transform="rotate(${angle} 50 50)" />`;
+            }).join('')}
+          </svg>
 
-          <!-- Aguja con rotación dinámica -->
+          <!-- Aguja Giratoria -->
           <div class="needle-wrapper" style="transform: rotate(${rotationDegrees}deg);">
             <div class="needle-hand"></div>
           </div>
 
-          <!-- Tiempo digital central -->
+          <!-- Tiempo Digital y Estado -->
           <div class="center-time-display">
             <span class="block-type-icon">${typeIcons[currentBlock.type]}</span>
             <h1 class="time-digital">${minutes}:${seconds}</h1>
@@ -107,36 +104,37 @@ export class ActiveTimerView {
         </div>
       </main>
 
-      <!-- Botones de Control -->
       <footer class="timer-controls">
-        <button class="control-btn square-btn" id="btn-stop" title="Detener">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <!-- Detener (Cuadrado Minimalista) -->
+        <button class="control-btn side-btn" id="btn-stop" title="Detener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="5" y="5" width="14" height="14" rx="2" />
           </svg>
         </button>
 
+        <!-- Play / Pause Principal -->
         <button class="control-btn play-pause-btn" id="btn-toggle-pause">
           ${this.isPaused ? `
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              <path d="M8 5v14l11-7z"/>
             </svg>
           ` : `
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1" />
+              <rect x="14" y="4" width="4" height="16" rx="1" />
             </svg>
           `}
         </button>
 
-        <button class="control-btn skip-btn" id="btn-skip" title="Siguiente bloque">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 4 15 12 5 20 5 4"></polygon>
-            <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
+        <!-- Siguiente Bloque -->
+        <button class="control-btn side-btn" id="btn-skip" title="Siguiente bloque">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 4l10 8-10 8V4z" fill="currentColor" />
+            <line x1="19" y1="5" x2="19" y2="19" stroke-width="2.5" stroke-linecap="round" />
           </svg>
         </button>
       </footer>
 
-      <!-- Indicador de Bloque Siguiente -->
       <div class="next-block-preview">
         ${nextBlock ? `
           Siguiente: <span>${typeIcons[nextBlock.type]} ${typeNames[nextBlock.type]} ${nextBlock.durationMinutes}m</span>
@@ -159,14 +157,11 @@ export class ActiveTimerView {
         this.remainingSeconds--;
         this.updateClockUI(view);
       } else {
-        // 1. Obtener el bloque actual y el siguiente
         const completedBlock = this.currentFlow!.blocks[this.currentBlockIndex];
         const nextBlock = this.currentFlow!.blocks[this.currentBlockIndex + 1];
 
-        // 2. Reproducir Sonido Sintético
         AudioService.playBlockEndSound(completedBlock.type);
 
-        // 3. 🔔 Lanza Notificación Nativa al SO
         TauriService.notifyBlockFinished(
           `¡Bloque de ${completedBlock.type.toLowerCase()} completado!`,
           nextBlock 
@@ -174,7 +169,6 @@ export class ActiveTimerView {
             : '¡Has finalizado todo el flujo!'
         );
 
-        // 4. Transición de bloques o finalización
         if (this.currentBlockIndex < this.currentFlow!.blocks.length - 1) {
           this.currentBlockIndex++;
           this.setupCurrentBlock();
@@ -183,12 +177,11 @@ export class ActiveTimerView {
           this.clearTimer();
           this.saveCompletedSession();
           alert('¡Flujo completado con éxito!');
-          router.navigate('history');
+          router.navigate('home');
         }
       }
     }, 1000);
   }
-  
 
   private static updateClockUI(view: HTMLElement) {
     const elapsedSeconds = this.totalBlockSeconds - this.remainingSeconds;
@@ -205,13 +198,11 @@ export class ActiveTimerView {
   }
 
   private static bindEvents(view: HTMLElement, router: AppRouter) {
-    // Alternar Pausa
     view.querySelector('#btn-toggle-pause')?.addEventListener('click', () => {
       this.isPaused = !this.isPaused;
       this.renderLayout(view, router);
     });
 
-    // Saltar Bloque
     view.querySelector('#btn-skip')?.addEventListener('click', () => {
       if (this.currentFlow && this.currentBlockIndex < this.currentFlow.blocks.length - 1) {
         this.currentBlockIndex++;
@@ -220,11 +211,10 @@ export class ActiveTimerView {
       } else {
         this.clearTimer();
         this.saveCompletedSession();
-        router.navigate('history');
+        router.navigate('home');
       }
     });
 
-    // Detener y Salir al Home
     view.querySelector('#btn-stop')?.addEventListener('click', () => {
       this.clearTimer();
       router.navigate('home');
@@ -240,7 +230,6 @@ export class ActiveTimerView {
 
   private static saveCompletedSession() {
     if (!this.currentFlow) return;
-
     const totalMin = this.currentFlow.blocks.reduce((acc, b) => acc + b.durationMinutes, 0);
 
     StorageService.addHistoryEntry({
