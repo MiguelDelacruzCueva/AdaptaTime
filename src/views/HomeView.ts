@@ -9,7 +9,9 @@ export class HomeView {
     view.className = 'home-container';
 
     const user = StorageService.getUser();
-    const flows = StorageService.getFlows();
+    const flows = StorageService.getFlows().sort((a, b) => {
+  return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+});
     const userName = user ? user.name : 'Usuario';
 
     const hour = new Date().getHours();
