@@ -1,4 +1,4 @@
-// src/views/HomeView.ts (Reemplazar la clase completa)
+// src/views/HomeView.ts
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
 import { Flow, BlockType } from '../models/flow.model';
@@ -41,13 +41,7 @@ export class HomeView {
         </div>
 
         <div class="top-nav-actions">
-          <button class="icon-btn nav-icon" id="btn-nav-history" title="Historial">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="20" x2="18" y2="10"/>
-              <line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="14"/>
-            </svg>
-          </button>
+          <!-- Solo mantenemos el Calendario en el menú superior -->
           <button class="icon-btn nav-icon" id="btn-nav-calendar" title="Calendario">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -97,7 +91,23 @@ export class HomeView {
           <span class="section-title">MIS FLUJOS</span>
           <button class="btn-text-gold" id="btn-create-flow">+ Nuevo</button>
         </div>
-        <div class="flows-grid">
+
+        <!-- Buscador exclusivo para Mis Flujos -->
+        <div class="search-bar-wrapper">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input 
+            type="text" 
+            id="input-search-flows" 
+            class="search-input" 
+            placeholder="Buscar flujo por nombre..." 
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="flows-grid" id="flows-grid-container">
           ${flows.map(f => this.renderFlowCard(f)).join('')}
         </div>
       </div>
@@ -105,7 +115,6 @@ export class HomeView {
   }
 
   private static renderFlowCard(flow: Flow): string {
-    // 1. Calcular totales por categoría
     const totals: Record<BlockType, number> = {
       ENFOQUE: 0,
       DESCANSO: 0,
@@ -119,7 +128,6 @@ export class HomeView {
       totalMinutes += b.durationMinutes;
     });
 
-    // 2. Construir la tira de micro-iconos (ej: ⚡ 10m  ☕ 5m)
     const iconsMap: Record<BlockType, string> = {
       ENFOQUE: '⚡',
       DESCANSO: '☕',
@@ -136,13 +144,11 @@ export class HomeView {
         </span>
       `).join('');
 
-    // 3. Tiempo relativo ("Creado hace 0m")
     const createdText = this.formatCreatedTime(flow.createdAt);
 
     return `
       <div class="flow-card" data-id="${flow.id}">
         <div class="flow-info">
-          <!-- Barritas verticales a la izquierda -->
           <div class="flow-icon-bars">
             ${flow.blocks.map(b => `<span class="bar ${b.type.toLowerCase()}"></span>`).join('')}
           </div>
@@ -158,12 +164,23 @@ export class HomeView {
 
         <div class="flow-actions-right">
           <span class="total-duration">${totalMinutes}m</span>
+
+          <!-- Botón Editar Flujo -->
+          <button class="icon-btn edit-flow-btn" data-edit-id="${flow.id}" title="Editar flujo">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+            </svg>
+          </button>
+
+          <!-- Botón Eliminar Flujo -->
           <button class="icon-btn delete-flow-btn" data-delete-id="${flow.id}" title="Eliminar flujo">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
             </svg>
           </button>
-          <button class="play-btn" data-play-id="${flow.id}">▶</button>
+
+          <!-- Botón Reproducir -->
+          <button class="play-btn" data-play-id="${flow.id}" title="Iniciar flujo">▶</button>
         </div>
       </div>
     `;
@@ -216,10 +233,33 @@ export class HomeView {
       router.navigate('onboarding');
     });
 
-    // Navegación
-    view.querySelector('#btn-nav-history')?.addEventListener('click', () => router.navigate('history'));
+    // Buscador en tiempo real
+    const searchInput = view.querySelector('#input-search-flows') as HTMLInputElement;
+    searchInput?.addEventListener('input', (e) => {
+      const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
+      const cards = view.querySelectorAll('.flow-card');
+      cards.forEach(card => {
+        const title = card.querySelector('.flow-title')?.textContent?.toLowerCase() || '';
+        if (title.includes(query)) {
+          (card as HTMLElement).style.display = 'flex';
+        } else {
+          (card as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+
+    // Navegación a Calendario y Crear Flujo
     view.querySelector('#btn-nav-calendar')?.addEventListener('click', () => router.navigate('calendar'));
     view.querySelector('#btn-create-flow')?.addEventListener('click', () => router.navigate('flow-editor'));
+
+    // Botón Editar Flujo
+    view.querySelectorAll('[data-edit-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-edit-id');
+        router.navigate('flow-editor', { flowId: id });
+      });
+    });
 
     // Botón Play
     view.querySelectorAll('[data-play-id]').forEach(btn => {
