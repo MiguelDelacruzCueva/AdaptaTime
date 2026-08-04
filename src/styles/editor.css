@@ -254,3 +254,29 @@
 .timeline-bar-preview .segment.descanso { background-color: var(--color-descanso); }
 .timeline-bar-preview .segment.movimiento { background-color: var(--color-movimiento); }
 .timeline-bar-preview .segment.procrastinar { background-color: var(--color-procrastinar); }
+
+/* Input inline para doble clic en minutos */
+.duration-value-text {
+  padding: 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  font-weight: 500;
+  cursor: pointer;
+  
+}
+
+.duration-value-text:hover {
+  color: var(--color-enfoque);
+}
+
+.duration-input-inline {
+  width: 46px;
+  background-color: #19191d;
+  border: 1px solid var(--color-enfoque);
+  border-radius: 4px;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  text-align: center;
+  outline: none;
+  padding: 0.1rem 0.2rem;
+}
