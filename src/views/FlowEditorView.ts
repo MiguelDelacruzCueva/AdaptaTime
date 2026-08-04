@@ -12,16 +12,14 @@ export class FlowEditorView {
     const view = document.createElement('div');
     view.className = 'editor-container';
 
-    // Si viene flowId, estamos en MODO EDICIÓN
     this.editingFlowId = (params.flowId as string) || null;
     if (this.editingFlowId) {
       const flow = StorageService.getFlows().find(f => f.id === this.editingFlowId);
       if (flow) {
         this.flowName = flow.name;
-        this.blocks = [...flow.blocks];
+        this.blocks = JSON.parse(JSON.stringify(flow.blocks));
       }
     } else {
-      // Modo Creación Limpio (incluyendo posición obligatoria)
       this.flowName = '';
       this.blocks = [
         { id: FlowEditorView.generateId(), type: 'ENFOQUE' as BlockType, durationMinutes: 25, position: 0 },
@@ -44,7 +42,6 @@ export class FlowEditorView {
     };
 
     view.innerHTML = `
-      <!-- Encabezado con Input Elegante -->
       <header class="editor-header">
         <div class="header-title-input-wrapper">
           <button class="icon-btn" id="btn-back-home" title="Volver al inicio">
@@ -71,7 +68,6 @@ export class FlowEditorView {
       </header>
 
       <main class="editor-body">
-        <!-- Sidebar de Presets -->
         <aside class="block-selector-sidebar">
           <span class="sidebar-subtitle">TIPO DE BLOQUE</span>
 
@@ -96,13 +92,11 @@ export class FlowEditorView {
           </div>
         </aside>
 
-        <!-- Área de Secuencia de Bloques -->
         <section class="sequence-editor-area">
           <div class="blocks-sequence-list">
             ${this.blocks.map((b, idx) => `
               <div class="block-item-card ${b.type.toLowerCase()}" data-block-id="${b.id}">
                 <div class="block-left-info">
-                  <!-- Botones de Reordenar (Arriba / Abajo) -->
                   <div style="display:flex; flex-direction:column; gap:2px;">
                     <button class="icon-btn btn-move-up" data-idx="${idx}" ${idx === 0 ? 'disabled style="opacity:0.2;"' : ''}>▲</button>
                     <button class="icon-btn btn-move-down" data-idx="${idx}" ${idx === this.blocks.length - 1 ? 'disabled style="opacity:0.2;"' : ''}>▼</button>
@@ -114,7 +108,7 @@ export class FlowEditorView {
                 <div class="block-controls-right">
                   <div class="duration-adjuster">
                     <button class="btn-adjust btn-minus" data-id="${b.id}">-</button>
-                    <span class="duration-value-text">${b.durationMinutes}m</span>
+                    <span class="duration-value-text" data-id="${b.id}" title="Doble clic para editar minutos">${b.durationMinutes}m</span>
                     <button class="btn-adjust btn-plus" data-id="${b.id}">+</button>
                   </div>
                   <button class="btn-delete-block" data-id="${b.id}" title="Eliminar bloque">🗑️</button>
@@ -123,7 +117,6 @@ export class FlowEditorView {
             `).join('')}
           </div>
 
-          <!-- Línea visual preview -->
           <div class="timeline-bar-preview">
             ${this.blocks.map(b => `<div class="segment ${b.type.toLowerCase()}" style="flex: ${b.durationMinutes}"></div>`).join('')}
           </div>
@@ -153,8 +146,10 @@ export class FlowEditorView {
         return;
       }
 
+      this.syncPositions();
+
       const flowData: Flow = {
-        id: this.editingFlowId || crypto.randomUUID(),
+        id: this.editingFlowId || FlowEditorView.generateId(),
         name: this.flowName.trim(),
         blocks: this.blocks,
         createdAt: new Date().toISOString()
@@ -164,30 +159,23 @@ export class FlowEditorView {
       router.navigate('home');
     });
 
-    // Agregar Bloques desde la Barra Lateral
+    // Agregar Bloques desde Sidebar
     view.querySelectorAll('.block-preset-card').forEach(card => {
       card.addEventListener('click', () => {
         const type = card.getAttribute('data-type') as BlockType;
-        const defaultMin: Record<BlockType, number> = { 
-          ENFOQUE: 25, 
-          DESCANSO: 5, 
-          MOVIMIENTO: 10, 
-          PROCRASTINAR: 15 
-        };
-
+        const defaultMin: Record<BlockType, number> = { ENFOQUE: 25, DESCANSO: 5, MOVIMIENTO: 10, PROCRASTINAR: 15 };
         const newBlock: Block = {
           id: FlowEditorView.generateId(),
           type: type,
           durationMinutes: defaultMin[type] || 15,
           position: this.blocks.length
         };
-
         this.blocks.push(newBlock);
         this.renderContent(view, router);
       });
     });
 
-    // Ajustar Duración (+ / -)
+    // Botones + / -
     view.querySelectorAll('.btn-minus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
@@ -210,7 +198,41 @@ export class FlowEditorView {
       });
     });
 
-    // Reordenar Bloques (Arriba / Abajo)
+    // EDITAR MINUTOS CON DOBLE CLIC
+    view.querySelectorAll('.duration-value-text').forEach(span => {
+      span.addEventListener('dblclick', (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const id = target.getAttribute('data-id');
+        const block = this.blocks.find(b => b.id === id);
+        if (!block) return;
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '1';
+        input.max = '999';
+        input.value = block.durationMinutes.toString();
+        input.className = 'duration-input-inline';
+
+        target.replaceWith(input);
+        input.focus();
+        input.select();
+
+        const saveValue = () => {
+          const val = parseInt(input.value);
+          if (!isNaN(val) && val > 0) {
+            block.durationMinutes = val;
+          }
+          this.renderContent(view, router);
+        };
+
+        input.addEventListener('blur', saveValue);
+        input.addEventListener('keydown', (evt) => {
+          if (evt.key === 'Enter') saveValue();
+        });
+      });
+    });
+
+    // Reordenar Bloques
     view.querySelectorAll('.btn-move-up').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const idx = parseInt((e.currentTarget as HTMLElement).getAttribute('data-idx') || '0');
@@ -218,6 +240,7 @@ export class FlowEditorView {
           const temp = this.blocks[idx];
           this.blocks[idx] = this.blocks[idx - 1];
           this.blocks[idx - 1] = temp;
+          this.syncPositions();
           this.renderContent(view, router);
         }
       });
@@ -230,6 +253,7 @@ export class FlowEditorView {
           const temp = this.blocks[idx];
           this.blocks[idx] = this.blocks[idx + 1];
           this.blocks[idx + 1] = temp;
+          this.syncPositions();
           this.renderContent(view, router);
         }
       });
@@ -240,11 +264,18 @@ export class FlowEditorView {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
         this.blocks = this.blocks.filter(b => b.id !== id);
+        this.syncPositions();
         this.renderContent(view, router);
       });
     });
-    
   }
+
+  private static syncPositions() {
+    this.blocks.forEach((b, idx) => {
+      b.position = idx;
+    });
+  }
+
   private static generateId(): string {
     if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
       return window.crypto.randomUUID();
