@@ -5,6 +5,7 @@ import { AudioService } from '../services/audio.service';
 import { TauriService } from '../services/tauri.service';
 import { Flow, BlockType } from '../models/flow.model';
 import { BLOCK_ICONS_SVG } from '../utils/icons';
+import { ModalService } from '../services/modal.service';
 
 export class ActiveTimerView {
   private static timerInterval: number | null = null;
@@ -148,7 +149,7 @@ export class ActiveTimerView {
     this.clearTimer();
 
     // Verificamos con frecuencia alta (250ms) comparando la hora real del sistema
-    this.timerInterval = window.setInterval(() => {
+    this.timerInterval = window.setInterval(async () => {
       if (this.isPaused) return;
 
       const now = Date.now();
@@ -168,11 +169,9 @@ export class ActiveTimerView {
 
         // Notificación de SO
         TauriService.notifyBlockFinished(
-          `¡Bloque de ${completedBlock.type.toLowerCase()} completado!`,
-          nextBlock 
-            ? `Siguiente: ${nextBlock.type} (${nextBlock.durationMinutes}m)` 
-            : '¡Has finalizado todo el flujo!'
-        );
+            `¡Bloque de ${completedBlock.type.toLowerCase()} completado!`,
+            `Siguiente: ${nextBlock.type} (${nextBlock.durationMinutes}m)`
+          );
 
         if (this.currentBlockIndex < this.currentFlow!.blocks.length - 1) {
           this.currentBlockIndex++;
@@ -181,7 +180,22 @@ export class ActiveTimerView {
         } else {
           this.clearTimer();
           this.saveCompletedSession();
-          alert('¡Flujo completado con éxito!');
+
+          AudioService.playFlowCompleteSound();
+
+          // 2. Notificación del Sistema Operativo
+          TauriService.notifyBlockFinished(
+            '¡Flujo finalizado!',
+            'Has completado con éxito todos los bloques programados.'
+          );
+
+          // 3. Modal Personalizado con diseño oscuro
+          await ModalService.alert(
+            '¡Flujo completado!',
+            'Has completado con éxito todas las fases de este flujo.',
+            '🎉'
+          );
+
           router.navigate('home');
         }
       }

@@ -3,6 +3,7 @@ import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
 import { Flow, BlockType } from '../models/flow.model';
 import { BLOCK_ICONS_SVG } from '../utils/icons';
+import { ModalService } from '../services/modal.service';
 
 export class HomeView {
   static render(router: AppRouter): HTMLElement {
@@ -269,15 +270,22 @@ export class HomeView {
 
     // Botón Eliminar Flujo
     view.querySelectorAll('[data-delete-id]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const id = (e.currentTarget as HTMLElement).getAttribute('data-delete-id');
-        if (id && confirm('¿Deseas eliminar este flujo?')) {
-          const flows = StorageService.getFlows().filter(f => f.id !== id);
-          localStorage.setItem('focus_flow_flows', JSON.stringify(flows));
-          router.navigate('home');
-        }
-      });
-    });
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const id = (e.currentTarget as HTMLElement).getAttribute('data-delete-id');
+    if (id) {
+      const confirmed = await ModalService.confirm(
+        'Eliminar flujo',
+        '¿Estás seguro de que deseas eliminar este flujo? Esta acción no se puede deshacer.',
+        '🗑️'
+      );
+      if (confirmed) {
+        const flows = StorageService.getFlows().filter(f => f.id !== id);
+        localStorage.setItem('focus_flow_flows', JSON.stringify(flows));
+        router.navigate('home');
+      }
+    }
+  });
+});
   }
 }

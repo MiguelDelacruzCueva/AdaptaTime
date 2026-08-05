@@ -3,6 +3,7 @@ import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
 import { Block, BlockType, Flow } from '../models/flow.model';
 import { BLOCK_ICONS_SVG } from '../utils/icons';
+import { ModalService } from '../services/modal.service';
 
 export class FlowEditorView {
   private static flowName: string = '';
@@ -142,13 +143,13 @@ export class FlowEditorView {
     view.querySelector('#btn-back-home')?.addEventListener('click', () => router.navigate('home'));
 
     // Guardar Flujo
-    view.querySelector('#btn-save-flow')?.addEventListener('click', () => {
+    view.querySelector('#btn-save-flow')?.addEventListener('click', async () => {
       if (!this.flowName.trim()) {
-        alert('Por favor ponle un nombre a tu flujo.');
+         await ModalService.alert('Nombre requerido', 'Por favor asígnale un nombre a tu flujo antes de guardar.', '⚠️');
         return;
       }
       if (this.blocks.length === 0) {
-        alert('Agrega al menos un bloque al flujo.');
+        await ModalService.alert('Sin bloques', 'Agrega al menos un bloque a la secuencia.', '⚠️');
         return;
       }
 
