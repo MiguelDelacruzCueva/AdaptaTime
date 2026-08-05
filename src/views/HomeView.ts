@@ -2,6 +2,7 @@
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
 import { Flow, BlockType } from '../models/flow.model';
+import { BLOCK_ICONS_SVG } from '../utils/icons';
 
 export class HomeView {
   static render(router: AppRouter): HTMLElement {
@@ -138,13 +139,13 @@ export class HomeView {
     };
 
     const breakdownHTML = (Object.keys(totals) as BlockType[])
-      .filter(type => totals[type] > 0)
-      .map(type => `
-        <span class="meta-item">
-          <span class="meta-icon">${iconsMap[type]}</span>
-          <span>${totals[type]}m</span>
-        </span>
-      `).join('');
+  .filter(type => totals[type] > 0)
+  .map(type => `
+    <span class="meta-item">
+      ${BLOCK_ICONS_SVG[type]}
+      <span>${totals[type]}m</span>
+    </span>
+  `).join('');
 
     const createdText = this.formatCreatedTime(flow.createdAt);
 

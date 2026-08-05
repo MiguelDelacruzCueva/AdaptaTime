@@ -4,6 +4,7 @@ import { StorageService } from '../services/storage.service';
 import { AudioService } from '../services/audio.service';
 import { TauriService } from '../services/tauri.service';
 import { Flow, BlockType } from '../models/flow.model';
+import { BLOCK_ICONS_SVG } from '../utils/icons';
 
 export class ActiveTimerView {
   private static timerInterval: number | null = null;
@@ -57,13 +58,6 @@ export class ActiveTimerView {
       PROCRASTINAR: 'Procrastinar'
     };
 
-    const typeIcons: Record<BlockType, string> = {
-      ENFOQUE: '⚡',
-      DESCANSO: '☕',
-      MOVIMIENTO: '📈',
-      PROCRASTINAR: '🎮'
-    };
-
     const elapsedSeconds = this.totalBlockSeconds - this.remainingSeconds;
     const rotationDegrees = (elapsedSeconds / this.totalBlockSeconds) * 360;
 
@@ -82,7 +76,7 @@ export class ActiveTimerView {
 
       <main class="clock-stage">
         <div class="circle-clock ${currentBlock.type.toLowerCase()}">
-          <!-- Marcas Ticks Alrededor del Esfera -->
+          <!-- Marcas Ticks Alrededor de la Esfera -->
           <svg class="ticks-svg" viewBox="0 0 100 100">
             ${Array.from({ length: 12 }).map((_, i) => {
               const angle = i * 30;
@@ -97,7 +91,7 @@ export class ActiveTimerView {
 
           <!-- Tiempo Digital y Estado -->
           <div class="center-time-display">
-            <span class="block-type-icon">${typeIcons[currentBlock.type]}</span>
+            <span class="block-type-icon">${BLOCK_ICONS_SVG[currentBlock.type]}</span>
             <h1 class="time-digital">${minutes}:${seconds}</h1>
             <span class="block-type-name">${typeNames[currentBlock.type]}</span>
           </div>
@@ -137,7 +131,7 @@ export class ActiveTimerView {
 
       <div class="next-block-preview">
         ${nextBlock ? `
-          Siguiente: <span>${typeIcons[nextBlock.type]} ${typeNames[nextBlock.type]} ${nextBlock.durationMinutes}m</span>
+          Siguiente: <span>${BLOCK_ICONS_SVG[nextBlock.type]} ${typeNames[nextBlock.type]} ${nextBlock.durationMinutes}m</span>
         ` : `
           <span>Último bloque del flujo</span>
         `}
