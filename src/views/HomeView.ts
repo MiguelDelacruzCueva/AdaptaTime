@@ -93,7 +93,10 @@ export class HomeView {
       <div class="flows-list-container">
         <div class="section-header">
           <span class="section-title">MIS FLUJOS</span>
-          <button class="btn-text-gold" id="btn-create-flow">+ Nuevo</button>
+          <div style="display:flex; gap: 0.8rem;">
+            <button class="btn-text-gold" id="btn-start-live">⚡ Al vuelo</button>
+            <button class="btn-text-gold" id="btn-create-flow">+ Nuevo</button>
+          </div>
         </div>
 
         <!-- Buscador exclusivo para Mis Flujos -->
@@ -204,6 +207,7 @@ export class HomeView {
     const btnReset = view.querySelector('#btn-reset-welcome')!;
     const inputName = view.querySelector('#input-edit-name') as HTMLInputElement;
     const nameText = view.querySelector('#user-name-text')!;
+    view.querySelector('#btn-start-live')?.addEventListener('click', () => router.navigate('live-timer'));
 
     btnEdit.addEventListener('click', () => {
       displayContainer.classList.add('hidden');

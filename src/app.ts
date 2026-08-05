@@ -6,6 +6,7 @@ import { FlowEditorView } from './views/FlowEditorView';
 import { ActiveTimerView } from './views/ActiveTimerView';
 import { HistoryView } from './views/HistoryView';
 import { CalendarView } from './views/CalendarView';
+import { LiveTimerView } from './views/LiveTimerView';
 
 export type Route = 
   | 'onboarding'
@@ -13,7 +14,8 @@ export type Route =
   | 'flow-editor'
   | 'active-timer'
   | 'history'
-  | 'calendar';
+  | 'calendar'
+  | 'live-timer';
 
 export class AppRouter {
   private container: HTMLElement;
@@ -55,6 +57,9 @@ export class AppRouter {
         break;
       case 'calendar':
         this.container.appendChild(CalendarView.render(this));
+        break;
+      case 'live-timer':
+        this.container.appendChild(LiveTimerView.render(this));
         break;
       default:
         this.container.appendChild(HomeView.render(this));
