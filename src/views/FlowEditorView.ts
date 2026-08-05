@@ -2,6 +2,7 @@
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
 import { Block, BlockType, Flow } from '../models/flow.model';
+import { BLOCK_ICONS_SVG } from '../utils/icons';
 
 export class FlowEditorView {
   private static flowName: string = '';
@@ -34,13 +35,6 @@ export class FlowEditorView {
   private static renderContent(view: HTMLElement, router: AppRouter) {
     const totalMinutes = this.blocks.reduce((acc, b) => acc + b.durationMinutes, 0);
 
-    const iconsMap: Record<BlockType, string> = {
-      ENFOQUE: '⚡',
-      DESCANSO: '☕',
-      MOVIMIENTO: '📈',
-      PROCRASTINAR: '🎮'
-    };
-
     view.innerHTML = `
       <header class="editor-header">
         <div class="header-title-input-wrapper">
@@ -72,23 +66,35 @@ export class FlowEditorView {
           <span class="sidebar-subtitle">TIPO DE BLOQUE</span>
 
           <div class="block-preset-card" data-type="ENFOQUE">
-            <h4 class="preset-title">⚡ Enfoque</h4>
-            <span class="preset-desc">25m por defecto</span>
+            ${BLOCK_ICONS_SVG.ENFOQUE}
+            <div class="preset-info">
+              <h4 class="preset-title">Enfoque</h4>
+              <span class="preset-desc">25m por defecto</span>
+            </div>
           </div>
 
           <div class="block-preset-card" data-type="DESCANSO">
-            <h4 class="preset-title">☕ Descanso</h4>
-            <span class="preset-desc">5m por defecto</span>
+            ${BLOCK_ICONS_SVG.DESCANSO}
+            <div class="preset-info">
+              <h4 class="preset-title">Descanso</h4>
+              <span class="preset-desc">5m por defecto</span>
+            </div>
           </div>
 
           <div class="block-preset-card" data-type="MOVIMIENTO">
-            <h4 class="preset-title">📈 Movimiento</h4>
-            <span class="preset-desc">10m por defecto</span>
+            ${BLOCK_ICONS_SVG.MOVIMIENTO}
+            <div class="preset-info">
+              <h4 class="preset-title">Movimiento</h4>
+              <span class="preset-desc">10m por defecto</span>
+            </div>
           </div>
 
           <div class="block-preset-card" data-type="PROCRASTINAR">
-            <h4 class="preset-title">🎮 Procrastinar</h4>
-            <span class="preset-desc">15m por defecto</span>
+            ${BLOCK_ICONS_SVG.PROCRASTINAR}
+            <div class="preset-info">
+              <h4 class="preset-title">Procrastinar</h4>
+              <span class="preset-desc">15m por defecto</span>
+            </div>
           </div>
         </aside>
 
@@ -102,7 +108,7 @@ export class FlowEditorView {
                     <button class="icon-btn btn-move-down" data-idx="${idx}" ${idx === this.blocks.length - 1 ? 'disabled style="opacity:0.2;"' : ''}>▼</button>
                   </div>
                   <span class="block-index-number">${idx + 1}</span>
-                  <span class="block-name-type">${iconsMap[b.type]} ${b.type.charAt(0) + b.type.slice(1).toLowerCase()}</span>
+                  <span class="block-name-type">${BLOCK_ICONS_SVG[b.type]} ${b.type.charAt(0) + b.type.slice(1).toLowerCase()}</span>
                 </div>
 
                 <div class="block-controls-right">
@@ -198,7 +204,7 @@ export class FlowEditorView {
       });
     });
 
-    // EDITAR MINUTOS CON DOBLE CLIC
+    // Editar minutos con doble clic
     view.querySelectorAll('.duration-value-text').forEach(span => {
       span.addEventListener('dblclick', (e) => {
         const target = e.currentTarget as HTMLElement;

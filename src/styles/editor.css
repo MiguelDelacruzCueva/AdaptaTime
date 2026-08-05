@@ -122,11 +122,9 @@
 
 .preset-title {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--text-main);
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .preset-desc {
@@ -279,4 +277,40 @@
   text-align: center;
   outline: none;
   padding: 0.1rem 0.2rem;
+}
+/* Coloración dinámica de los iconos SVG */
+.block-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.block-svg.enfoque { color: var(--color-enfoque); }
+.block-svg.descanso { color: var(--color-descanso); }
+.block-svg.movimiento { color: var(--color-movimiento); }
+.block-svg.procrastinar { color: var(--color-procrastinar); }
+
+/* Ajuste del preset en el editor lateral */
+.block-preset-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: var(--bg-card);
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border-card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.block-preset-card:hover {
+  background-color: var(--bg-card-hover);
+  border-color: #2e2e33;
+}
+
+.preset-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
