@@ -10,8 +10,11 @@ export class ActiveTimerView {
   private static timerInterval: number | null = null;
   private static currentFlow: Flow | null = null;
   private static currentBlockIndex: number = 0;
-  private static remainingSeconds: number = 0;
+  
+  // Variables del Motor de Tiempo Preciso
   private static totalBlockSeconds: number = 0;
+  private static remainingSeconds: number = 0;
+  private static endTime: number = 0;
   private static isPaused: boolean = false;
 
   static render(router: AppRouter, params: Record<string, unknown> = {}): HTMLElement {
@@ -43,6 +46,12 @@ export class ActiveTimerView {
     const block = this.currentFlow.blocks[this.currentBlockIndex];
     this.totalBlockSeconds = block.durationMinutes * 60;
     this.remainingSeconds = this.totalBlockSeconds;
+    this.resetTargetEndTime();
+  }
+
+  private static resetTargetEndTime() {
+    // La hora de finalización exacta = Hora actual + Segundos restantes acumulados
+    this.endTime = Date.now() + this.remainingSeconds * 1000;
   }
 
   private static renderLayout(view: HTMLElement, router: AppRouter) {
@@ -76,7 +85,6 @@ export class ActiveTimerView {
 
       <main class="clock-stage">
         <div class="circle-clock ${currentBlock.type.toLowerCase()}">
-          <!-- Marcas Ticks Alrededor de la Esfera -->
           <svg class="ticks-svg" viewBox="0 0 100 100">
             ${Array.from({ length: 12 }).map((_, i) => {
               const angle = i * 30;
@@ -84,12 +92,10 @@ export class ActiveTimerView {
             }).join('')}
           </svg>
 
-          <!-- Aguja Giratoria -->
           <div class="needle-wrapper" style="transform: rotate(${rotationDegrees}deg);">
             <div class="needle-hand"></div>
           </div>
 
-          <!-- Tiempo Digital y Estado -->
           <div class="center-time-display">
             <span class="block-type-icon">${BLOCK_ICONS_SVG[currentBlock.type]}</span>
             <h1 class="time-digital">${minutes}:${seconds}</h1>
@@ -99,14 +105,12 @@ export class ActiveTimerView {
       </main>
 
       <footer class="timer-controls">
-        <!-- Detener (Cuadrado Minimalista) -->
         <button class="control-btn side-btn" id="btn-stop" title="Detener">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="5" y="5" width="14" height="14" rx="2" />
           </svg>
         </button>
 
-        <!-- Play / Pause Principal -->
         <button class="control-btn play-pause-btn" id="btn-toggle-pause">
           ${this.isPaused ? `
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -120,7 +124,6 @@ export class ActiveTimerView {
           `}
         </button>
 
-        <!-- Siguiente Bloque -->
         <button class="control-btn side-btn" id="btn-skip" title="Siguiente bloque">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 4l10 8-10 8V4z" fill="currentColor" />
@@ -142,20 +145,28 @@ export class ActiveTimerView {
   }
 
   private static startTimer(view: HTMLElement, router: AppRouter) {
-    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.clearTimer();
 
+    // Verificamos con frecuencia alta (250ms) comparando la hora real del sistema
     this.timerInterval = window.setInterval(() => {
       if (this.isPaused) return;
 
-      if (this.remainingSeconds > 0) {
-        this.remainingSeconds--;
+      const now = Date.now();
+      const secondsLeft = Math.max(0, Math.ceil((this.endTime - now) / 1000));
+
+      if (secondsLeft !== this.remainingSeconds) {
+        this.remainingSeconds = secondsLeft;
         this.updateClockUI(view);
-      } else {
+      }
+
+      if (secondsLeft <= 0) {
         const completedBlock = this.currentFlow!.blocks[this.currentBlockIndex];
         const nextBlock = this.currentFlow!.blocks[this.currentBlockIndex + 1];
 
+        // Sonido armónico limpio
         AudioService.playBlockEndSound(completedBlock.type);
 
+        // Notificación de SO
         TauriService.notifyBlockFinished(
           `¡Bloque de ${completedBlock.type.toLowerCase()} completado!`,
           nextBlock 
@@ -174,7 +185,7 @@ export class ActiveTimerView {
           router.navigate('home');
         }
       }
-    }, 1000);
+    }, 250);
   }
 
   private static updateClockUI(view: HTMLElement) {
@@ -194,6 +205,12 @@ export class ActiveTimerView {
   private static bindEvents(view: HTMLElement, router: AppRouter) {
     view.querySelector('#btn-toggle-pause')?.addEventListener('click', () => {
       this.isPaused = !this.isPaused;
+
+      if (!this.isPaused) {
+        // Al reanudar, recalculamos el tiempo final proyectado
+        this.resetTargetEndTime();
+      }
+
       this.renderLayout(view, router);
     });
 

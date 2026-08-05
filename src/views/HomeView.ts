@@ -131,12 +131,7 @@ export class HomeView {
       totalMinutes += b.durationMinutes;
     });
 
-    const iconsMap: Record<BlockType, string> = {
-      ENFOQUE: '⚡',
-      DESCANSO: '☕',
-      MOVIMIENTO: '📈',
-      PROCRASTINAR: '🎮'
-    };
+    
 
     const breakdownHTML = (Object.keys(totals) as BlockType[])
   .filter(type => totals[type] > 0)

@@ -1,13 +1,11 @@
 // src/services/audio.service.ts
-import { BlockType } from '../models/flow.model';
-
 export class AudioService {
   private static audioCtx: AudioContext | null = null;
 
-  private static getContext(): AudioContext {
+  private static getAudioContext(): AudioContext {
     if (!this.audioCtx) {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.audioCtx = new AudioContextClass();
+      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      this.audioCtx = new AudioCtxClass();
     }
     if (this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
@@ -15,48 +13,40 @@ export class AudioService {
     return this.audioCtx;
   }
 
-  // Toca una nota suave (frecuencia en Hz, duración en segundos)
-  private static playTone(freq: number, type: OscillatorType, duration: number) {
+  /**
+   * Reproduce un timbre armónico suave (chime/campana) al finalizar un bloque.
+   */
+  static playBlockEndSound(_type?: string): void {
     try {
-      const ctx = this.getContext();
-      const osc = ctx.createOscillator();
+      const ctx = this.getAudioContext();
+      const now = ctx.currentTime;
+
+      // Generadores de onda sinusoidal (Fundamental C5: 523.25Hz y Octava C6: 1046.5Hz)
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(523.25, now);
 
-      // Transición suave de volumen para evitar "clicks"
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1046.5, now);
 
-      osc.connect(gain);
+      // Envolvente de volumen: Ataque inmediato y resonancia que se desvanece suavemente
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
       gain.connect(ctx.destination);
 
-      osc.start();
-      osc.stop(ctx.currentTime + duration);
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 2.6);
+      osc2.stop(now + 2.6);
     } catch (e) {
-      console.warn('Error reproduciendo audio:', e);
-    }
-  }
-
-  // Reproduce un timbre específico según el bloque que finaliza
-  static playBlockEndSound(type: BlockType) {
-    switch (type) {
-      case 'ENFOQUE':
-        // Doblón suave (Éxito de enfoque)
-        this.playTone(523.25, 'sine', 0.3); // C5
-        setTimeout(() => this.playTone(659.25, 'sine', 0.5), 150); // E5
-        break;
-      case 'DESCANSO':
-      case 'MOVIMIENTO':
-        // Tono relajante de descanso
-        this.playTone(440, 'sine', 0.4); // A4
-        setTimeout(() => this.playTone(349.23, 'sine', 0.6), 200); // F4
-        break;
-      case 'PROCRASTINAR':
-        // Advertencia sutil
-        this.playTone(220, 'triangle', 0.4); // A3
-        break;
+      console.error('Error al reproducir audio:', e);
     }
   }
 }
