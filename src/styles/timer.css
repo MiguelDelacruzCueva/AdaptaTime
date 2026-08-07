@@ -210,3 +210,278 @@
     gap: 1.2rem;
   }
 }
+/* Selector de Fase en Vivo */
+.live-phase-selector {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0.8rem 0;
+}
+
+.phase-chip {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  color: var(--text-muted);
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.phase-chip:hover {
+  border-color: #333;
+  color: var(--text-main);
+}
+
+.phase-chip.active.enfoque { border-color: var(--color-enfoque); color: var(--color-enfoque); background-color: #1a1710; }
+.phase-chip.active.descanso { border-color: var(--color-descanso); color: var(--color-descanso); background-color: #10171a; }
+.phase-chip.active.movimiento { border-color: var(--color-movimiento); color: var(--color-movimiento); background-color: #101a14; }
+.phase-chip.active.procrastinar { border-color: var(--color-procrastinar); color: var(--color-procrastinar); background-color: #1a1014; }
+
+/* --- CRONÓMETRO LIBRE --- */
+.live-cronometer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 2rem 3rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.live-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.live-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.page-title-live {
+  font-size: 1.6rem;
+  margin: 0;
+  font-family: var(--font-serif);
+}
+
+.live-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 620px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.digital-display-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 2rem;
+}
+
+.digital-clock-large {
+  font-size: clamp(3.8rem, 9vh, 5.2rem);
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1;
+}
+
+.clock-subtext {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.clock-subtext.muted {
+  color: #55555e;
+}
+
+.clock-subtext.active-action.enfoque { color: var(--color-enfoque); }
+.clock-subtext.active-action.descanso { color: var(--color-descanso); }
+.clock-subtext.active-action.movimiento { color: var(--color-movimiento); }
+.clock-subtext.active-action.procrastinar { color: var(--color-procrastinar); }
+
+/* BARRA DINÁMICA DE PORCENTAJE */
+.live-bar-wrapper {
+  width: 100%;
+  margin-bottom: 2.5rem;
+}
+
+.live-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: #1a1a1e;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  transition: all 0.3s ease;
+}
+
+.live-bar-empty {
+  width: 100%;
+  height: 100%;
+  background-color: #1a1a1e;
+}
+
+.bar-segment {
+  height: 100%;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bar-segment.enfoque { background-color: var(--color-enfoque); }
+.bar-segment.descanso { background-color: var(--color-descanso); }
+.bar-segment.movimiento { background-color: var(--color-movimiento); }
+.bar-segment.procrastinar { background-color: var(--color-procrastinar); }
+
+/* LEYENDA INFERIOR DE LA BARRA */
+.live-bar-legend {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}
+
+.legend-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.legend-chip.enfoque { color: var(--color-enfoque); }
+.legend-chip.descanso { color: var(--color-descanso); }
+.legend-chip.movimiento { color: var(--color-movimiento); }
+.legend-chip.procrastinar { color: var(--color-procrastinar); }
+
+/* GRILLA DE ACCIONES 2x2 */
+.action-grid-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 2.5rem;
+}
+
+.grid-section-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.actions-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+.action-card {
+  background-color: #141417;
+  border: 1px solid #222228;
+  border-radius: 16px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-card:hover {
+  background-color: #1a1a1f;
+  border-color: #33333d;
+}
+
+.action-card.active-card {
+  background-color: #1a1a1f;
+}
+
+.action-card.active-card.enfoque { border-color: var(--color-enfoque); }
+.action-card.active-card.descanso { border-color: var(--color-descanso); }
+.action-card.active-card.movimiento { border-color: var(--color-movimiento); }
+.action-card.active-card.procrastinar { border-color: var(--color-procrastinar); }
+
+.card-left-content {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.card-text-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.card-time-spent {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.active-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.action-card.enfoque .active-dot { background-color: var(--color-enfoque); }
+.action-card.descanso .active-dot { background-color: var(--color-descanso); }
+.action-card.movimiento .active-dot { background-color: var(--color-movimiento); }
+.action-card.procrastinar .active-dot { background-color: var(--color-procrastinar); }
+
+/* CONTROLES INFERIORES */
+.live-footer-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.control-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.control-icon-btn:hover {
+  color: var(--text-main);
+}
+
+.text-control-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.text-control-btn:hover {
+  color: var(--text-main);
+}
