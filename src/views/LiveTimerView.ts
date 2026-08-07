@@ -327,9 +327,6 @@ export class LiveTimerView {
         this.accumulatedSeconds[this.activeType] += this.currentPhaseElapsedSeconds;
       }
 
-      this.clearTimer();
-      AudioService.playFlowCompleteSound();
-
       const totals = this.accumulatedSeconds;
       const blocks: Block[] = (Object.keys(totals) as BlockType[])
         .filter(t => totals[t] > 0)
@@ -345,7 +342,19 @@ export class LiveTimerView {
         return;
       }
 
-      const flowName = prompt('Nombre para este nuevo flujo:') || `Flujo Libre ${new Date().toLocaleDateString('es-ES')}`;
+      const defaultName = `Flujo Libre ${new Date().toLocaleDateString('es-ES')}`;
+      const flowName = await ModalService.prompt(
+        'Guardar nuevo flujo',
+        'Ingresa un nombre para registrar esta sesión:',
+        defaultName,
+        '💾'
+      );
+
+      // Si el usuario presiona Cancelar o lo deja vacío
+      if (!flowName) return;
+
+      this.clearTimer();
+      AudioService.playFlowCompleteSound();
 
       const newFlow: Flow = {
         id: crypto.randomUUID(),

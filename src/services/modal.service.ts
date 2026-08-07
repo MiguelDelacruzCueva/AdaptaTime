@@ -43,6 +43,69 @@ export class ModalService {
       });
     });
   }
+  static prompt(title: string, message: string, defaultValue: string = '', icon: string = '✏️'): Promise<string | null> {
+    return new Promise((resolve) => {
+      const existing = document.querySelector('.custom-modal-overlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'custom-modal-overlay';
+
+      overlay.innerHTML = `
+        <div class="custom-modal-card">
+          <div class="custom-modal-header">
+            <span class="custom-modal-icon">${icon}</span>
+            <h3 class="custom-modal-title">${title}</h3>
+          </div>
+          <p class="custom-modal-message">${message}</p>
+          <input type="text" id="custom-modal-input" class="custom-modal-input" value="${defaultValue}" autocomplete="off" />
+          <div class="custom-modal-actions">
+            <button class="custom-modal-btn btn-cancel" id="modal-btn-cancel">Cancelar</button>
+            <button class="custom-modal-btn btn-confirm" id="modal-btn-confirm">Guardar</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      requestAnimationFrame(() => {
+        overlay.classList.add('active');
+        const input = overlay.querySelector('#custom-modal-input') as HTMLInputElement;
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
+
+      const closeModal = (result: string | null) => {
+        overlay.classList.remove('active');
+        setTimeout(() => {
+          overlay.remove();
+          resolve(result);
+        }, 200);
+      };
+
+      const inputEl = overlay.querySelector('#custom-modal-input') as HTMLInputElement;
+
+      overlay.querySelector('#modal-btn-confirm')?.addEventListener('click', () => {
+        const val = inputEl.value.trim();
+        closeModal(val || null);
+      });
+
+      overlay.querySelector('#modal-btn-cancel')?.addEventListener('click', () => {
+        closeModal(null);
+      });
+
+      inputEl?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const val = inputEl.value.trim();
+          closeModal(val || null);
+        } else if (e.key === 'Escape') {
+          closeModal(null);
+        }
+      });
+    });
+  }
 
   private static showModal(options: ModalOptions & { onConfirm?: () => void; onCancel?: () => void }) {
     // Eliminar modales previos si existen
