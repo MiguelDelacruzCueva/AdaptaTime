@@ -32,5 +32,31 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "package": {
+    "productName": "focus-flow",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "notification": {
+        "all": true
+      }
+    },
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
+    },
+    "windows": [
+      {
+        "title": "focus-flow",
+        "width": 900,
+        "height": 680,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ]
   }
 }
+
