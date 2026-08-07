@@ -2,50 +2,57 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::{
-    CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
-    WindowEvent,
+    menu::{Menu, MenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Manager, WindowEvent,
 };
 
 fn main() {
-    // 1. Crear opciones del menú contextual del System Tray
-    let show = CustomMenuItem::new("show".to_string(), "Mostrar Focus Flow");
-    let quit = CustomMenuItem::new("quit".to_string(), "Salir");
-
-    let tray_menu = SystemTrayMenu::new()
-        .add_item(show)
-        .add_native_item(SystemTrayMenuItem::Separator)
-        .add_item(quit);
-
-    let system_tray = SystemTray::new().with_menu(tray_menu);
-
     tauri::Builder::default()
-        .system_tray(system_tray)
-        // 2. Manejar eventos de interacción con el icono del System Tray
-        .on_system_tray_event(|app, event| match event {
-            // Clic izquierdo en el icono de la bandeja -> Restaurar ventana
-            SystemTrayEvent::LeftClick { .. } => {
-                let window = app.get_window("main").unwrap();
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
-            // Clics en las opciones del menú contextual
-            SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-                "show" => {
-                    let window = app.get_window("main").unwrap();
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-                "quit" => {
-                    std::process::exit(0);
-                }
-                _ => {}
-            },
-            _ => {}
+        .setup(|app| {
+            // Opciones del menú de la bandeja
+            let show_item = MenuItem::with_id(app, "show", "Mostrar Focus Flow", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+
+            // Construir el System Tray usando el icono de la ventana por defecto
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
+            Ok(())
         })
-        // 3. Interceptar el evento de cerrar la ventana [X] para minimizar a la bandeja
-        .on_window_event(|event| match event.event() {
+        // Interceptar el botón [X] para minimizar a la bandeja en lugar de cerrar
+        .on_window_event(|window, event| match event {
             WindowEvent::CloseRequested { api, .. } => {
-                event.window().hide().unwrap();
+                let _ = window.hide();
                 api.prevent_close();
             }
             _ => {}
