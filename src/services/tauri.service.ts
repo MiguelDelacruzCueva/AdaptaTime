@@ -1,30 +1,38 @@
 // src/services/tauri.service.ts
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 
 export class TauriService {
-  private static permissionGranted = false;
-
-  static async init() {
+  static async notifyBlockFinished(title: string, body: string): Promise<void> {
     try {
-      this.permissionGranted = await isPermissionGranted();
-      if (!this.permissionGranted) {
-        const permission = await requestPermission();
-        this.permissionGranted = permission === 'granted';
+      // Intenta usar la API nativa de Tauri si está disponible
+      const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+      if (isTauri) {
+        const { isPermissionGranted, requestPermission, sendNotification } = await import('@tauri-apps/plugin-notification');
+        let permission = await isPermissionGranted();
+        if (!permission) {
+          const permissionResult = await requestPermission();
+          permission = permissionResult === 'granted';
+        }
+        if (permission) {
+          sendNotification({ title, body });
+          return;
+        }
       }
-    } catch (e) {
-      console.warn('Entorno web o notificaciones no disponibles:', e);
+    } catch {
+      // Silenciamos la advertencia del plugin y pasamos al fallback Web
     }
-  }
 
-  static async notifyBlockFinished(title: string, body: string) {
-    try {
-      if (this.permissionGranted) {
-        sendNotification({ title, body });
-      } else {
-        console.log(`[Notificación en consola] ${title}: ${body}`);
+    // Fallback con la API de Notificaciones estándar de HTML5
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            new Notification(title, { body });
+          }
+        });
       }
-    } catch (e) {
-      console.warn('Error al enviar notificación:', e);
     }
   }
 }
