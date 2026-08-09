@@ -1,11 +1,11 @@
 // src/main.ts
+import './styles/main.css';
+import './styles/editor.css';
+import './styles/timer.css';
 import { AppRouter } from './app';
-import { TauriService } from './services/tauri.service';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Inicializar notificaciones del SO
-  TauriService.init();
-
-  const router = new AppRouter('app');
+  const appElement = document.getElementById('app') || document.body;
+  const router = new AppRouter(appElement);
   router.init();
 });
