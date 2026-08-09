@@ -721,7 +721,9 @@ html, body {
 
 .card-header-title {
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 400;
+  font-style: italic;
+  font-family: var(--font-serif);
   color: var(--text-main);
   margin: 0;
   display: flex;
@@ -869,5 +871,28 @@ html, body {
   }
   .dashboard-container {
     padding: 1.2rem;
+  }
+}
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
   }
 }
