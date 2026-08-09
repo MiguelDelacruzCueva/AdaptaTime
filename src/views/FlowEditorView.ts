@@ -63,6 +63,7 @@ export class FlowEditorView {
       </header>
 
       <main class="editor-body">
+        <!-- Panel de Presets (Se vuelve 2x2 en pantallas pequeñas) -->
         <aside class="block-selector-sidebar">
           <span class="sidebar-subtitle">TIPO DE BLOQUE</span>
 
@@ -99,7 +100,15 @@ export class FlowEditorView {
           </div>
         </aside>
 
+        <!-- Área de la Secuencia -->
         <section class="sequence-editor-area">
+          
+          <!-- LÍNEA VISUAL PREVIEW: Ubicada siempre en la cabeza del flujo -->
+          <div class="timeline-bar-preview" title="Vista previa del flujo">
+            ${this.blocks.map(b => `<div class="segment ${b.type.toLowerCase()}" style="flex: ${b.durationMinutes}"></div>`).join('')}
+          </div>
+
+          <!-- Lista de Bloques con scroll vertical independiente -->
           <div class="blocks-sequence-list">
             ${this.blocks.map((b, idx) => `
               <div class="block-item-card ${b.type.toLowerCase()}" data-block-id="${b.id}">
@@ -123,10 +132,6 @@ export class FlowEditorView {
               </div>
             `).join('')}
           </div>
-
-          <div class="timeline-bar-preview">
-            ${this.blocks.map(b => `<div class="segment ${b.type.toLowerCase()}" style="flex: ${b.durationMinutes}"></div>`).join('')}
-          </div>
         </section>
       </main>
     `;
@@ -145,7 +150,7 @@ export class FlowEditorView {
     // Guardar Flujo
     view.querySelector('#btn-save-flow')?.addEventListener('click', async () => {
       if (!this.flowName.trim()) {
-         await ModalService.alert('Nombre requerido', 'Por favor asígnale un nombre a tu flujo antes de guardar.', '⚠️');
+        await ModalService.alert('Nombre requerido', 'Por favor ponle un nombre a tu flujo antes de guardar.', '⚠️');
         return;
       }
       if (this.blocks.length === 0) {
