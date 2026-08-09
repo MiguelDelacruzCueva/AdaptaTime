@@ -7,6 +7,11 @@ const KEYS = {
   FLOWS: 'focus_flow_flows',
   HISTORY: 'focus_flow_history'
 };
+export interface TaskItem {
+  id: string;
+  title: string;
+  completed: boolean;
+}
 
 export class StorageService {
   // --- USUARIO ---
@@ -48,5 +53,38 @@ export class StorageService {
     const history = this.getHistory();
     history.unshift(entry); // Añade al inicio
     localStorage.setItem(KEYS.HISTORY, JSON.stringify(history));
+  }
+  static getTasks(): TaskItem[] {
+    const data = localStorage.getItem('focus_flow_tasks');
+    return data ? JSON.parse(data) : [
+      { id: '1', title: 'Avanzar informe de proyecto', completed: false },
+      { id: '2', title: 'Revisar pendientes del flujo', completed: true }
+    ];
+  }
+
+  static saveTasks(tasks: TaskItem[]): void {
+    localStorage.setItem('focus_flow_tasks', JSON.stringify(tasks));
+  }
+
+  static addTask(title: string): TaskItem[] {
+    const tasks = this.getTasks();
+    const newTask: TaskItem = { id: crypto.randomUUID(), title, completed: false };
+    tasks.unshift(newTask);
+    this.saveTasks(tasks);
+    return tasks;
+  }
+
+  static toggleTask(id: string): TaskItem[] {
+    const tasks = this.getTasks();
+    const task = tasks.find(t => t.id === id);
+    if (task) task.completed = !task.completed;
+    this.saveTasks(tasks);
+    return tasks;
+  }
+
+  static deleteTask(id: string): TaskItem[] {
+    const tasks = this.getTasks().filter(t => t.id !== id);
+    this.saveTasks(tasks);
+    return tasks;
   }
 }

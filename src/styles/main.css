@@ -576,3 +576,298 @@ body {
 .custom-modal-input:focus {
   border-color: var(--color-enfoque);
 }
+/* --- SCROLLBAR OSCURO MINIMALISTA GLOBAL --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2b2b36;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3e3e4d;
+}
+
+/* ESTRECHAR OVERFLOW HORIZONTAL */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: var(--bg-main, #0f0f12);
+  color: var(--text-main, #e1e1e6);
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+/* APP SHELL: LAYOUT CON SIDEBAR */
+.app-layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* BARRA LATERAL (SIDEBAR) */
+.sidebar {
+  width: 220px;
+  background-color: #131317;
+  border-right: 1px solid #1e1e24;
+  display: flex;
+  flex-direction: column;
+  padding: 1.2rem 0.8rem;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem 1.5rem 0.6rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text-main);
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  color: var(--text-muted, #888896);
+  background: transparent;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.nav-item:hover {
+  background-color: #1c1c22;
+  color: var(--text-main);
+}
+
+.nav-item.active {
+  background-color: #1e1d18;
+  color: var(--color-enfoque, #e5c158);
+}
+
+/* TOPBAR RESPONSIVA PARA PANTALLAS PEQUEÑAS */
+.topbar-mobile {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.2rem;
+  background-color: #131317;
+  border-bottom: 1px solid #1e1e24;
+}
+
+.main-viewport {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* --- DASHBOARD GRID (INSPIRADO EN RELOJ DE WINDOWS) --- */
+.dashboard-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.dashboard-card {
+  background-color: #16161a;
+  border: 1px solid #22222a;
+  border-radius: 16px;
+  padding: 1.4rem;
+  box-sizing: border-box;
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.card-header-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* MÓDULO DE PROGRESO DIARIO */
+.progress-ring-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.ring-center-info {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-goal-title {
+  font-size: 0.75rem;
+  color: #888896;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ring-goal-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.ring-goal-unit {
+  font-size: 0.8rem;
+  color: #888896;
+}
+
+.metrics-row-3 {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #22222a;
+  text-align: center;
+}
+
+.metric-item-val {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.metric-item-lbl {
+  font-size: 0.75rem;
+  color: #888896;
+}
+
+/* MÓDULO DE TAREAS */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.task-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #1c1c22;
+  border: 1px solid #282832;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.task-item-row.completed span {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.task-check-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #555566;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.task-item-row.completed .task-check-circle {
+  background-color: var(--color-enfoque, #e5c158);
+  border-color: var(--color-enfoque, #e5c158);
+  color: #000;
+}
+
+.task-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.task-input-field {
+  flex: 1;
+  background-color: #121215;
+  border: 1px solid #282832;
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  color: var(--text-main);
+  outline: none;
+  font-size: 0.85rem;
+}
+
+.task-input-field:focus {
+  border-color: var(--color-enfoque, #e5c158);
+}
+
+/* RESPONSIVIDAD (MENÚ DESPLEGABLE CUANDO SE ACHICA) */
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar {
+    position: fixed;
+    left: -240px;
+    top: 0;
+    bottom: 0;
+  }
+  .sidebar.open {
+    left: 0;
+  }
+  .topbar-mobile {
+    display: flex;
+  }
+  .dashboard-container {
+    padding: 1.2rem;
+  }
+}
