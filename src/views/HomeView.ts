@@ -15,36 +15,33 @@ export class HomeView {
       return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
     const tasks = StorageService.getTasks();
-    const userName = user ? user.name : 'Usuario';
 
-    // Cálculo básico de minutos completados hoy
     const history = StorageService.getHistory();
     const todayStr = new Date().toISOString().split('T')[0];
     const todayMinutes = history
       .filter(h => h.completedAt.startsWith(todayStr))
       .reduce((acc, h) => acc + h.totalDurationMinutes, 0);
 
-    const goalMinutes = 30; // Meta diaria configurable
+    const goalMinutes = 30;
     const goalPercent = Math.min(100, Math.round((todayMinutes / goalMinutes) * 100));
 
     view.innerHTML = `
       <div class="dashboard-grid">
         <!-- COLUMNA IZQUIERDA: FLUJOS Y TAREAS -->
-        <div class="main-column" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="main-column" style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0;">
           
           <!-- MÓDULO MIS FLUJOS -->
-          <div class="dashboard-card">
+          <div class="dashboard-card" style="min-width: 0;">
             <div class="card-header-row">
               <h3 class="card-header-title">
-                <span>|</span> MIS FLUJOS
+                <span>⚡</span> MIS FLUJOS
               </h3>
               <div style="display: flex; gap: 0.6rem;">
-                <button class="btn-text-gold" id="btn-start-live">Al vuelo</button>
+                <button class="btn-text-gold" id="btn-start-live">⚡ Al vuelo</button>
                 <button class="btn-text-gold" id="btn-create-flow">+ Nuevo</button>
               </div>
             </div>
 
-            <!-- Buscador -->
             <div class="search-bar-wrapper" style="margin-bottom: 1rem;">
               <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -55,14 +52,14 @@ export class HomeView {
             <div class="flows-grid" id="flows-grid-container" style="max-height: 380px; overflow-y: auto;">
               ${flows.length === 0 ? `
                 <p class="empty-description" style="text-align: center; padding: 2rem 0;">
-                  No tienes flujos creados aún. haz clic en <strong>+ Nuevo</strong> para empezar.
+                  No tienes flujos creados aún. Haz clic en <strong>+ Nuevo</strong> para empezar.
                 </p>
               ` : flows.map(f => this.renderFlowCard(f)).join('')}
             </div>
           </div>
 
           <!-- MÓDULO DE TAREAS -->
-          <div class="dashboard-card">
+          <div class="dashboard-card" style="min-width: 0;">
             <div class="card-header-row">
               <h3 class="card-header-title">
                 <span>☑</span> TAREAS DE LA SESIÓN
@@ -83,14 +80,12 @@ export class HomeView {
 
         <!-- COLUMNA DERECHA: PROGRESO DIARIO -->
         <div class="side-column" style="display: flex; flex-direction: column; gap: 1.5rem;">
-          
           <div class="dashboard-card">
             <div class="card-header-row">
-              <h3 class="card-header-title">PROGRESO DIARIO</h3>
+              <h3 class="card-header-title">Progreso diario</h3>
             </div>
 
             <div class="progress-ring-stage" style="position: relative; justify-content: center;">
-              <!-- Anillo SVG de Meta -->
               <svg width="200" height="200" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#22222a" stroke-width="8" />
                 <circle 
@@ -127,7 +122,6 @@ export class HomeView {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     `;
@@ -145,6 +139,13 @@ export class HomeView {
       totals[b.type] += b.durationMinutes;
       totalMinutes += b.durationMinutes;
     });
+    let previewBlocks = flow.blocks;
+    if (flow.blocks.length > 10) {
+      previewBlocks = Array.from({ length: 10 }, (_, i) => {
+        const sampleIdx = Math.floor((i * flow.blocks.length) / 10);
+        return flow.blocks[sampleIdx];
+      });
+    }
 
     const breakdownHTML = (Object.keys(totals) as BlockType[])
       .filter(type => totals[type] > 0)
@@ -158,18 +159,20 @@ export class HomeView {
     return `
       <div class="flow-card" data-id="${flow.id}">
         <div class="flow-info">
-          <div class="flow-icon-bars">
-            ${flow.blocks.map(b => `<span class="bar ${b.type.toLowerCase()}"></span>`).join('')}
+          <!-- Vista previa limitada estrictamente a máximo 10 líneas -->
+          <div class="flow-icon-bars" title="${flow.blocks.length} bloques en total">
+            ${previewBlocks.map(b => `<span class="bar ${b.type.toLowerCase()}"></span>`).join('')}
           </div>
 
           <div class="flow-details">
-            <h4 class="flow-title">${flow.name}</h4>
+            <h4 class="flow-title" title="${flow.name}">${flow.name}</h4>
             <div class="flow-meta-row">
               ${breakdownHTML}
             </div>
           </div>
         </div>
 
+        <!-- Acciones alineadas y rígidas en la derecha -->
         <div class="flow-actions-right">
           <span class="total-duration">${totalMinutes}m</span>
           <button class="icon-btn edit-flow-btn" data-edit-id="${flow.id}" title="Editar">✏️</button>
@@ -183,11 +186,11 @@ export class HomeView {
   private static renderTaskItem(task: TaskItem): string {
     return `
       <div class="task-item-row ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
-        <div style="display:flex; align-items:center; gap:0.8rem;">
+        <div class="task-content-wrapper">
           <div class="task-check-circle" data-check-id="${task.id}">
             ${task.completed ? '✓' : ''}
           </div>
-          <span>${task.title}</span>
+          <span class="task-title-text" title="${task.title}">${task.title}</span>
         </div>
         <button class="icon-btn btn-delete-task" data-del-task="${task.id}" style="opacity:0.6;">✕</button>
       </div>
@@ -205,11 +208,11 @@ export class HomeView {
       });
     });
 
-    // Rutas de inicio
+    // Rutas de navegación
     view.querySelector('#btn-start-live')?.addEventListener('click', () => router.navigate('live-timer'));
     view.querySelector('#btn-create-flow')?.addEventListener('click', () => router.navigate('flow-editor'));
 
-    // Botones de flujo (Play, Editar, Eliminar)
+    // Acciones de flujos
     view.querySelectorAll('[data-play-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
@@ -234,44 +237,71 @@ export class HomeView {
           if (confirmed) {
             const flows = StorageService.getFlows().filter(f => f.id !== id);
             localStorage.setItem('focus_flow_flows', JSON.stringify(flows));
-            router.navigate('home');
+            const card = view.querySelector(`.flow-card[data-id="${id}"]`);
+            card?.remove();
           }
         }
       });
     });
 
-    // Gestión de Tareas
+    // Re-renderizado local de tareas sin reseteo de scroll
+    this.bindTaskEvents(view);
+  }
+
+  private static refreshTasksUI(view: HTMLElement) {
+    const tasksContainer = view.querySelector('#tasks-list-container');
+    if (tasksContainer) {
+      const tasks = StorageService.getTasks();
+      tasksContainer.innerHTML = tasks.map(t => this.renderTaskItem(t)).join('');
+      this.bindTaskEvents(view);
+    }
+  }
+
+  private static bindTaskEvents(view: HTMLElement) {
+    const input = view.querySelector('#input-new-task') as HTMLInputElement;
+
     const addTask = () => {
-      const input = view.querySelector('#input-new-task') as HTMLInputElement;
+      if (!input) return;
       const val = input.value.trim();
       if (val) {
         StorageService.addTask(val);
         input.value = '';
-        router.navigate('home');
+        this.refreshTasksUI(view);
       }
     };
 
-    view.querySelector('#btn-add-task')?.addEventListener('click', addTask);
-    view.querySelector('#input-new-task')?.addEventListener('keydown', (e) => {
-      if ((e as KeyboardEvent).key === 'Enter') addTask();
-    });
+    // Prevenimos que se dupliquen listeners en el botón de agregar
+    const addBtn = view.querySelector('#btn-add-task');
+    if (addBtn) {
+      const newAddBtn = addBtn.cloneNode(true);
+      addBtn.parentNode?.replaceChild(newAddBtn, addBtn);
+      newAddBtn.addEventListener('click', addTask);
+    }
 
+    if (input) {
+      input.onkeydown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') addTask();
+      };
+    }
+
+    // Toggle de estado de tareas sin scroll reset
     view.querySelectorAll('[data-check-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-check-id');
         if (id) {
           StorageService.toggleTask(id);
-          router.navigate('home');
+          this.refreshTasksUI(view);
         }
       });
     });
 
+    // Eliminación de tareas sin scroll reset
     view.querySelectorAll('[data-del-task]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-del-task');
         if (id) {
           StorageService.deleteTask(id);
-          router.navigate('home');
+          this.refreshTasksUI(view);
         }
       });
     });
