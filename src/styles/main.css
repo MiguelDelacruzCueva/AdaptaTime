@@ -1011,7 +1011,7 @@ html, body {
   }
 }
 
-@container flowcardcontainer (max-width: 440px) {
+@container flowcardcontainer (max-width: 500px) {
   .desktop-only {
     display: none !important; /* Oculta editar y eliminar directos */
   }

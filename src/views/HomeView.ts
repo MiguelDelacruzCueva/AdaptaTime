@@ -34,21 +34,23 @@ export class HomeView {
           <div class="dashboard-card" style="min-width: 0;">
             <div class="card-header-row">
               <h3 class="card-header-title">
-                <span>⚡</span> MIS FLUJOS
+                MIS FLUJOS
               </h3>
-              <div style="display: flex; gap: 0.6rem;">
-                <button class="btn-text-gold" id="btn-create-flow">+ Nuevo</button>
-              </div>
+              
             </div>
 
-            <div class="search-bar-wrapper" style="margin-bottom: 1rem;">
-              <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input type="text" id="input-search-flows" class="search-input" placeholder="Buscar flujo por nombre..." autocomplete="off" />
-            </div>
-            <div> 
-              <button class="btn-gold-pill" id="btn-create-flow" style="padding: 0.5rem 1rem;">+</button>
+            <div class="search-row-container" style="display: flex; gap: 0.6rem; align-items: center; margin-bottom: 1rem;">
+              <div class="search-bar-wrapper" style="flex: 1; margin-bottom: 0;">
+                <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="input-search-flows" class="search-input" placeholder="Buscar flujo por nombre..." autocomplete="off" />
+              </div>
+
+              <!-- Botón Circular + al lado de la búsqueda -->
+              <button class="btn-gold-pill btn-add-flow-circle" id="btn-create-flow" title="Nuevo flujo">
+                +
+              </button>
             </div>
 
             <div class="flows-grid" id="flows-grid-container" style="max-height: 380px; overflow-y: auto;">
