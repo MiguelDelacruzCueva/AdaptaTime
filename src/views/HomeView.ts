@@ -37,7 +37,6 @@ export class HomeView {
                 <span>⚡</span> MIS FLUJOS
               </h3>
               <div style="display: flex; gap: 0.6rem;">
-                <button class="btn-text-gold" id="btn-start-live">⚡ Al vuelo</button>
                 <button class="btn-text-gold" id="btn-create-flow">+ Nuevo</button>
               </div>
             </div>
@@ -47,6 +46,9 @@ export class HomeView {
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               <input type="text" id="input-search-flows" class="search-input" placeholder="Buscar flujo por nombre..." autocomplete="off" />
+            </div>
+            <div> 
+              <button class="btn-gold-pill" id="btn-create-flow" style="padding: 0.5rem 1rem;">+</button>
             </div>
 
             <div class="flows-grid" id="flows-grid-container" style="max-height: 380px; overflow-y: auto;">
@@ -139,6 +141,7 @@ export class HomeView {
       totals[b.type] += b.durationMinutes;
       totalMinutes += b.durationMinutes;
     });
+
     let previewBlocks = flow.blocks;
     if (flow.blocks.length > 10) {
       previewBlocks = Array.from({ length: 10 }, (_, i) => {
@@ -150,7 +153,7 @@ export class HomeView {
     const breakdownHTML = (Object.keys(totals) as BlockType[])
       .filter(type => totals[type] > 0)
       .map(type => `
-        <span class="meta-item" style="display:inline-flex; align-items:center; gap:3px;">
+        <span class="meta-item">
           ${BLOCK_ICONS_SVG[type]}
           <span>${totals[type]}m</span>
         </span>
@@ -159,7 +162,6 @@ export class HomeView {
     return `
       <div class="flow-card" data-id="${flow.id}">
         <div class="flow-info">
-          <!-- Vista previa limitada estrictamente a máximo 10 líneas -->
           <div class="flow-icon-bars" title="${flow.blocks.length} bloques en total">
             ${previewBlocks.map(b => `<span class="bar ${b.type.toLowerCase()}"></span>`).join('')}
           </div>
@@ -172,12 +174,25 @@ export class HomeView {
           </div>
         </div>
 
-        <!-- Acciones alineadas y rígidas en la derecha -->
+        <!-- Acciones Responsivas -->
         <div class="flow-actions-right">
           <span class="total-duration">${totalMinutes}m</span>
-          <button class="icon-btn edit-flow-btn" data-edit-id="${flow.id}" title="Editar">✏️</button>
-          <button class="icon-btn delete-flow-btn" data-delete-id="${flow.id}" title="Eliminar">🗑️</button>
+
+          <!-- Botones Visibles en Pantalla Ancha -->
+          <button class="icon-btn edit-flow-btn desktop-only" data-edit-id="${flow.id}" title="Editar">✏️</button>
+          <button class="icon-btn delete-flow-btn desktop-only" data-delete-id="${flow.id}" title="Eliminar">🗑️</button>
+
+          <!-- Botón de Play Principal -->
           <button class="play-btn" data-play-id="${flow.id}" title="Iniciar">▶</button>
+
+          <!-- Menú de 3 Puntos para Pantalla Estrecha -->
+          <div class="flow-menu-wrapper mobile-only">
+            <button class="icon-btn btn-flow-menu" data-menu-id="${flow.id}" title="Opciones">⋮</button>
+            <div class="flow-menu-popover" id="popover-${flow.id}">
+              <button class="popover-item edit-flow-btn" data-edit-id="${flow.id}">✏️ Editar</button>
+              <button class="popover-item delete-flow-btn" data-delete-id="${flow.id}">🗑️ Eliminar</button>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -212,7 +227,28 @@ export class HomeView {
     view.querySelector('#btn-start-live')?.addEventListener('click', () => router.navigate('live-timer'));
     view.querySelector('#btn-create-flow')?.addEventListener('click', () => router.navigate('flow-editor'));
 
-    // Acciones de flujos
+    // Alternar Menú Flotante de 3 Puntos
+    view.querySelectorAll('[data-menu-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-menu-id');
+        const targetPopover = view.querySelector(`#popover-${id}`);
+        
+        // Cerrar otros menús abiertos
+        view.querySelectorAll('.flow-menu-popover').forEach(pop => {
+          if (pop !== targetPopover) pop.classList.remove('active');
+        });
+
+        targetPopover?.classList.toggle('active');
+      });
+    });
+
+    // Cerrar popovers al hacer clic fuera
+    document.addEventListener('click', () => {
+      view.querySelectorAll('.flow-menu-popover').forEach(pop => pop.classList.remove('active'));
+    });
+
+    // Iniciar Flujo
     view.querySelectorAll('[data-play-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
@@ -220,7 +256,8 @@ export class HomeView {
       });
     });
 
-    view.querySelectorAll('[data-edit-id]').forEach(btn => {
+    // Editar Flujo
+    view.querySelectorAll('.edit-flow-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).getAttribute('data-edit-id');
@@ -228,7 +265,8 @@ export class HomeView {
       });
     });
 
-    view.querySelectorAll('[data-delete-id]').forEach(btn => {
+    // Eliminar Flujo
+    view.querySelectorAll('.delete-flow-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).getAttribute('data-delete-id');
@@ -244,7 +282,6 @@ export class HomeView {
       });
     });
 
-    // Re-renderizado local de tareas sin reseteo de scroll
     this.bindTaskEvents(view);
   }
 
@@ -270,7 +307,6 @@ export class HomeView {
       }
     };
 
-    // Prevenimos que se dupliquen listeners en el botón de agregar
     const addBtn = view.querySelector('#btn-add-task');
     if (addBtn) {
       const newAddBtn = addBtn.cloneNode(true);
@@ -284,7 +320,6 @@ export class HomeView {
       };
     }
 
-    // Toggle de estado de tareas sin scroll reset
     view.querySelectorAll('[data-check-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-check-id');
@@ -295,7 +330,6 @@ export class HomeView {
       });
     });
 
-    // Eliminación de tareas sin scroll reset
     view.querySelectorAll('[data-del-task]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-del-task');
