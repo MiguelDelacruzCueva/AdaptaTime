@@ -52,7 +52,7 @@ export class HomeView {
             ` : `
               <div class="inline-name-edit-container">
                 <div class="inline-name-input-row">
-                  <input type="text" id="input-edit-username" class="inline-name-input" value="${userName}" autocomplete="off" />
+                  <input type="text" id="input-edit-username" class="inline-name-input" value="${userName}" maxlength="20" placeholder="Tu nombre..." autocomplete="off"/>
                   <button class="icon-btn" id="btn-save-name" title="Guardar" style="color: var(--color-enfoque, #e5c158);">✓</button>
                   <button class="icon-btn" id="btn-cancel-name" title="Cancelar">✕</button>
                 </div>

@@ -1041,15 +1041,21 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .greeting-user-name {
   font-family: var(--font-serif, serif);
   font-size: clamp(1.8rem, 4vw, 2.4rem);
-  font-weight: 600;
+  font-weight: 300;
   color: var(--text-main, #fff);
   margin: 0;
   line-height: 1.1;
+  white-space: nowrap ;
+  overflow: hidden ;
+  text-overflow: ellipsis ;
+  max-width: 100% ;
 }
 
 .inline-name-edit-container {
