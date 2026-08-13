@@ -1020,3 +1020,125 @@ html, body {
     display: flex !important; /* Activa el menú de 3 puntos (⋮) */
   }
 }
+
+.greeting-header-section {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.greeting-subtitle-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted, #888896);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.greeting-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.greeting-user-name {
+  font-family: var(--font-serif, serif);
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 600;
+  color: var(--text-main, #fff);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.inline-name-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.2rem;
+}
+
+.inline-name-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--color-enfoque, #e5c158);
+  padding-bottom: 0.2rem;
+}
+
+.inline-name-input {
+  background: transparent;
+  border: none;
+  font-family: var(--font-serif, serif);
+  font-size: 1.6rem;
+  color: var(--text-main, #fff);
+  outline: none;
+  width: 200px;
+}
+
+.link-back-welcome {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #888896);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.link-back-welcome:hover {
+  color: var(--text-main, #fff);
+}
+
+/* --- ESTADO VACÍO: CREA TU PRIMER FLUJO --- */
+.empty-hero-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background-color: #121215;
+  border: 1px dashed #282832;
+  border-radius: 18px;
+  gap: 1rem;
+}
+
+.color-dots-4-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.color-dots-4-row .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.color-dots-4-row .dot.enfoque { background-color: var(--color-enfoque, #e5c158); }
+.color-dots-4-row .dot.descanso { background-color: var(--color-descanso, #60a5fa); }
+.color-dots-4-row .dot.movimiento { background-color: var(--color-movimiento, #4ade80); }
+.color-dots-4-row .dot.procrastinar { background-color: var(--color-procrastinar, #f87171); }
+
+.empty-hero-title {
+  font-family: var(--font-serif, serif);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-main, #fff);
+  margin: 0;
+}
+
+.empty-hero-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted, #888896);
+  max-width: 380px;
+  line-height: 1.5;
+  margin: 0;
+}
