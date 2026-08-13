@@ -50,12 +50,10 @@ fn main() {
             Ok(())
         })
         // Interceptar el botón [X] para minimizar a la bandeja en lugar de cerrar
-        .on_window_event(|window, event| match event {
-            WindowEvent::CloseRequested { api, .. } => {
+        .on_window_event(|window, event| if let WindowEvent::CloseRequested { api, .. } = event {
+             
                 let _ = window.hide();
                 api.prevent_close();
-            }
-            _ => {}
         })
         .run(tauri::generate_context!())
         .expect("Error al iniciar la aplicación Tauri");
