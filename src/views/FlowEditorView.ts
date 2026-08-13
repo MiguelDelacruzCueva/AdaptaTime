@@ -34,6 +34,13 @@ export class FlowEditorView {
   }
 
   private static renderContent(view: HTMLElement, router: AppRouter) {
+    // 1. Guardar la posición de Scroll actual antes del re-renderizado
+    const oldList = view.querySelector('.blocks-sequence-list');
+    const listScrollTop = oldList ? oldList.scrollTop : 0;
+
+    const oldBody = view.querySelector('.editor-body');
+    const bodyScrollTop = oldBody ? oldBody.scrollTop : 0;
+
     const totalMinutes = this.blocks.reduce((acc, b) => acc + b.durationMinutes, 0);
 
     view.innerHTML = `
@@ -63,7 +70,7 @@ export class FlowEditorView {
       </header>
 
       <main class="editor-body">
-        <!-- Panel de Presets (Se vuelve 2x2 en pantallas pequeñas) -->
+        <!-- Presets sidebar -->
         <aside class="block-selector-sidebar">
           <span class="sidebar-subtitle">TIPO DE BLOQUE</span>
 
@@ -102,13 +109,10 @@ export class FlowEditorView {
 
         <!-- Área de la Secuencia -->
         <section class="sequence-editor-area">
-          
-          <!-- LÍNEA VISUAL PREVIEW: Ubicada siempre en la cabeza del flujo -->
           <div class="timeline-bar-preview" title="Vista previa del flujo">
             ${this.blocks.map(b => `<div class="segment ${b.type.toLowerCase()}" style="flex: ${b.durationMinutes}"></div>`).join('')}
           </div>
 
-          <!-- Lista de Bloques con scroll vertical independiente -->
           <div class="blocks-sequence-list">
             ${this.blocks.map((b, idx) => `
               <div class="block-item-card ${b.type.toLowerCase()}" data-block-id="${b.id}">
@@ -135,6 +139,13 @@ export class FlowEditorView {
         </section>
       </main>
     `;
+
+    // 2. Restaurar la posición de Scroll exacta
+    const newList = view.querySelector('.blocks-sequence-list');
+    if (newList && listScrollTop) newList.scrollTop = listScrollTop;
+
+    const newBody = view.querySelector('.editor-body');
+    if (newBody && bodyScrollTop) newBody.scrollTop = bodyScrollTop;
 
     this.bindEvents(view, router);
   }
@@ -187,7 +198,7 @@ export class FlowEditorView {
       });
     });
 
-    // Botones + / -
+    // Ajustadores + / -
     view.querySelectorAll('.btn-minus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
@@ -210,7 +221,7 @@ export class FlowEditorView {
       });
     });
 
-    // Editar minutos con doble clic
+    // Editar minutos inline (doble clic) sin flechitas feas
     view.querySelectorAll('.duration-value-text').forEach(span => {
       span.addEventListener('dblclick', (e) => {
         const target = e.currentTarget as HTMLElement;
@@ -244,7 +255,7 @@ export class FlowEditorView {
       });
     });
 
-    // Reordenar Bloques
+    // Reordenar Bloques manteniendo la posición de scroll
     view.querySelectorAll('.btn-move-up').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const idx = parseInt((e.currentTarget as HTMLElement).getAttribute('data-idx') || '0');

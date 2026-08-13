@@ -266,17 +266,25 @@
 .duration-value-text:hover {
   color: var(--color-enfoque);
 }
-
+.duration-input-inline::-webkit-outer-spin-button,
+.duration-input-inline::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 .duration-input-inline {
-  width: 46px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  width: 40px;
   background-color: #19191d;
-  border: 1px solid var(--color-enfoque);
-  border-radius: 4px;
-  color: var(--text-main);
+  border: 1px solid var(--color-enfoque, #e5c158);
+  border-radius: 6px;
+  color: var(--text-main, #fff);
   font-size: 0.85rem;
+  font-weight: 600;
   text-align: center;
   outline: none;
-  padding: 0.1rem 0.2rem;
+  padding: 0.15rem 0.2rem;
+  box-sizing: border-box;
 }
 /* Coloración dinámica de los iconos SVG */
 .block-svg {
@@ -550,17 +558,7 @@
   color: var(--color-enfoque, #e5c158);
 }
 
-.duration-input-inline {
-  width: 42px;
-  background-color: #19191d;
-  border: 1px solid var(--color-enfoque, #e5c158);
-  border-radius: 4px;
-  color: var(--text-main, #fff);
-  font-size: 0.82rem;
-  text-align: center;
-  outline: none;
-  padding: 0.1rem;
-}
+
 
 .btn-delete-block {
   background: transparent;
