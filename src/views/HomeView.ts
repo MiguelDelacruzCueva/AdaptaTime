@@ -6,6 +6,8 @@ import { BLOCK_ICONS_SVG } from '../utils/icons';
 import { ModalService } from '../services/modal.service';
 
 export class HomeView {
+  private static isEditingName: boolean = false;
+
   static render(router: AppRouter): HTMLElement {
     const view = document.createElement('div');
     view.className = 'dashboard-container';
@@ -25,20 +27,52 @@ export class HomeView {
     const goalMinutes = 30;
     const goalPercent = Math.min(100, Math.round((todayMinutes / goalMinutes) * 100));
 
+    const userName = user ? user.name : 'Usuario';
+    const greetingText = this.getGreetingByTime();
+
     view.innerHTML = `
       <div class="dashboard-grid">
-        <!-- COLUMNA IZQUIERDA: FLUJOS Y TAREAS -->
+        <!-- COLUMNA IZQUIERDA: ENCABEZADO SALUDO, FLUJOS Y TAREAS -->
         <div class="main-column" style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0;">
           
+          <!-- SECCIÓN DE SALUDO DINÁMICO CON EDICIÓN -->
+          <div class="greeting-header-section">
+            <span class="greeting-subtitle-label">${greetingText}</span>
+            
+            ${!this.isEditingName ? `
+              <div class="greeting-name-row">
+                <h2 class="greeting-user-name">${userName}</h2>
+                <button class="icon-btn" id="btn-edit-name" title="Editar nombre" style="font-size: 0.9rem; opacity: 0.7;">
+                  <svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                  </svg>
+                </button>
+              </div>
+            ` : `
+              <div class="inline-name-edit-container">
+                <div class="inline-name-input-row">
+                  <input type="text" id="input-edit-username" class="inline-name-input" value="${userName}" autocomplete="off" />
+                  <button class="icon-btn" id="btn-save-name" title="Guardar" style="color: var(--color-enfoque, #e5c158);">✓</button>
+                  <button class="icon-btn" id="btn-cancel-name" title="Cancelar">✕</button>
+                </div>
+                <button class="link-back-welcome" id="btn-back-onboarding">
+                  ← Volver a la bienvenida
+                </button>
+              </div>
+            `}
+          </div>
+
           <!-- MÓDULO MIS FLUJOS -->
           <div class="dashboard-card" style="min-width: 0;">
             <div class="card-header-row">
               <h3 class="card-header-title">
-                MIS FLUJOS
+                 MIS FLUJOS
               </h3>
               
             </div>
 
+            <!-- Buscador + Botón (+) -->
             <div class="search-row-container" style="display: flex; gap: 0.6rem; align-items: center; margin-bottom: 1rem;">
               <div class="search-bar-wrapper" style="flex: 1; margin-bottom: 0;">
                 <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -47,7 +81,6 @@ export class HomeView {
                 <input type="text" id="input-search-flows" class="search-input" placeholder="Buscar flujo por nombre..." autocomplete="off" />
               </div>
 
-              <!-- Botón Circular + al lado de la búsqueda -->
               <button class="btn-gold-pill btn-add-flow-circle" id="btn-create-flow" title="Nuevo flujo">
                 +
               </button>
@@ -55,9 +88,22 @@ export class HomeView {
 
             <div class="flows-grid" id="flows-grid-container" style="max-height: 380px; overflow-y: auto;">
               ${flows.length === 0 ? `
-                <p class="empty-description" style="text-align: center; padding: 2rem 0;">
-                  No tienes flujos creados aún. Haz clic en <strong>+ Nuevo</strong> para empezar.
-                </p>
+                <!-- TARJETA "CREA TU PRIMER FLUJO" RECUPERADA -->
+                <div class="empty-hero-card">
+                  <div class="color-dots-4-row">
+                    <span class="dot enfoque"></span>
+                    <span class="dot descanso"></span>
+                    <span class="dot movimiento"></span>
+                    <span class="dot procrastinar"></span>
+                  </div>
+                  <h3 class="empty-hero-title">Crea tu primer flujo</h3>
+                  <p class="empty-hero-desc">
+                    Diseña una secuencia de bloques — enfoque, descanso, movimiento — y ponla en marcha cuando quieras.
+                  </p>
+                  <button class="btn-gold-pill" id="btn-empty-create-flow" style="padding: 0.6rem 1.4rem;">
+                    + Nuevo flujo
+                  </button>
+                </div>
               ` : flows.map(f => this.renderFlowCard(f)).join('')}
             </div>
           </div>
@@ -176,18 +222,14 @@ export class HomeView {
           </div>
         </div>
 
-        <!-- Acciones Responsivas -->
         <div class="flow-actions-right">
           <span class="total-duration">${totalMinutes}m</span>
 
-          <!-- Botones Visibles en Pantalla Ancha -->
           <button class="icon-btn edit-flow-btn desktop-only" data-edit-id="${flow.id}" title="Editar">✏️</button>
           <button class="icon-btn delete-flow-btn desktop-only" data-delete-id="${flow.id}" title="Eliminar">🗑️</button>
 
-          <!-- Botón de Play Principal -->
           <button class="play-btn" data-play-id="${flow.id}" title="Iniciar">▶</button>
 
-          <!-- Menú de 3 Puntos para Pantalla Estrecha -->
           <div class="flow-menu-wrapper mobile-only">
             <button class="icon-btn btn-flow-menu" data-menu-id="${flow.id}" title="Opciones">⋮</button>
             <div class="flow-menu-popover" id="popover-${flow.id}">
@@ -215,6 +257,37 @@ export class HomeView {
   }
 
   private static bindEvents(view: HTMLElement, router: AppRouter) {
+    // --- LÓGICA DE EDICIÓN DE NOMBRE Y BIENVENIDA ---
+    view.querySelector('#btn-edit-name')?.addEventListener('click', () => {
+      this.isEditingName = true;
+      router.navigate('home');
+    });
+
+    view.querySelector('#btn-cancel-name')?.addEventListener('click', () => {
+      this.isEditingName = false;
+      router.navigate('home');
+    });
+
+    view.querySelector('#btn-save-name')?.addEventListener('click', () => {
+      const input = view.querySelector('#input-edit-username') as HTMLInputElement;
+      const newName = input ? input.value.trim() : '';
+      if (newName) {
+        StorageService.saveUser(newName);
+      }
+      this.isEditingName = false;
+      router.navigate('home');
+    });
+
+    view.querySelector('#btn-back-onboarding')?.addEventListener('click', () => {
+      this.isEditingName = false;
+      router.navigate('onboarding');
+    });
+
+    // --- EVENTO CREAR PRIMER FLUJO DESDE TARJETA VACÍA ---
+    view.querySelector('#btn-empty-create-flow')?.addEventListener('click', () => {
+      router.navigate('flow-editor');
+    });
+
     // Buscador
     const searchInput = view.querySelector('#input-search-flows') as HTMLInputElement;
     searchInput?.addEventListener('input', (e) => {
@@ -225,18 +298,17 @@ export class HomeView {
       });
     });
 
-    // Rutas de navegación
+    // Rutas
     view.querySelector('#btn-start-live')?.addEventListener('click', () => router.navigate('live-timer'));
     view.querySelector('#btn-create-flow')?.addEventListener('click', () => router.navigate('flow-editor'));
 
-    // Alternar Menú Flotante de 3 Puntos
+    // Alternar Popover 3 puntos
     view.querySelectorAll('[data-menu-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).getAttribute('data-menu-id');
         const targetPopover = view.querySelector(`#popover-${id}`);
         
-        // Cerrar otros menús abiertos
         view.querySelectorAll('.flow-menu-popover').forEach(pop => {
           if (pop !== targetPopover) pop.classList.remove('active');
         });
@@ -245,12 +317,11 @@ export class HomeView {
       });
     });
 
-    // Cerrar popovers al hacer clic fuera
     document.addEventListener('click', () => {
       view.querySelectorAll('.flow-menu-popover').forEach(pop => pop.classList.remove('active'));
     });
 
-    // Iniciar Flujo
+    // Acciones de Flujo
     view.querySelectorAll('[data-play-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
@@ -258,7 +329,6 @@ export class HomeView {
       });
     });
 
-    // Editar Flujo
     view.querySelectorAll('.edit-flow-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -267,7 +337,6 @@ export class HomeView {
       });
     });
 
-    // Eliminar Flujo
     view.querySelectorAll('.delete-flow-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -277,8 +346,7 @@ export class HomeView {
           if (confirmed) {
             const flows = StorageService.getFlows().filter(f => f.id !== id);
             localStorage.setItem('focus_flow_flows', JSON.stringify(flows));
-            const card = view.querySelector(`.flow-card[data-id="${id}"]`);
-            card?.remove();
+            router.navigate('home');
           }
         }
       });
@@ -341,5 +409,12 @@ export class HomeView {
         }
       });
     });
+  }
+
+  private static getGreetingByTime(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'BUENOS DÍAS';
+    if (hour < 19) return 'BUENAS TARDES';
+    return 'BUENAS NOCHES';
   }
 }
