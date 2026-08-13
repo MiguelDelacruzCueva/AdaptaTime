@@ -227,11 +227,13 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-direction: row;
   background-color: var(--bg-card);
   padding: 1rem 1.4rem;
   border-radius: 16px;
   border: 1px solid var(--border-card);
   gap: 1rem;
+  
 }
 
 .flow-card:hover {
@@ -720,18 +722,21 @@ html, body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
 
 .card-header-title {
-  font-size: 1.05rem;
-  font-weight: 400;
+  font-size: 0.98rem;
+  font-weight: 600;
   font-style: italic;
   font-family: var(--font-serif);
   color: var(--text-main);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  white-space: nowrap;
 }
 
 /* MÓDULO DE PROGRESO DIARIO */
@@ -878,9 +883,18 @@ html, body {
 }
 
 /* RESPONSIVIDAD (MENÚ DESPLEGABLE CUANDO SE ACHICA) */
-@media (max-width: 900px) {
+@media (max-width: 1020px) {
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr ; /* Fuerza 1 sola columna limpia */
+    gap: 1.2rem;
+  }
+  .main-column, .side-column {
+    width: 100% ;
+  }
+
+  /* El progreso diario se posiciona de forma ordenada debajo o arriba sin aplastar los flujos */
+  .side-column {
+    order: 2;
   }
 }
 
@@ -890,6 +904,7 @@ html, body {
     left: -240px;
     top: 0;
     bottom: 0;
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .sidebar.open {
     left: 0;
@@ -898,7 +913,7 @@ html, body {
     display: flex;
   }
   .dashboard-container {
-    padding: 1.2rem;
+    padding: 1rem;
   }
 }
 .sidebar-backdrop {
@@ -922,5 +937,86 @@ html, body {
     display: block;
     opacity: 1;
     pointer-events: auto;
+  }
+}
+/* --- POP-OVER DE 3 PUNTOS RESPONSIVO --- */
+.flow-menu-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.flow-menu-popover {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: #1a1a20;
+  border: 1px solid #2e2e38;
+  border-radius: 12px;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 120px;
+}
+
+.flow-menu-popover.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.popover-item {
+  background: transparent;
+  border: none;
+  color: var(--text-main, #fff);
+  padding: 0.5rem 0.8rem;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  transition: background-color 0.15s ease;
+  width: 100%;
+}
+
+.popover-item:hover {
+  background-color: #282832;
+}
+
+/* REGLAS RESPONSIVAS DE VISIBILIDAD DE BOTONES */
+.mobile-only {
+  display: none ;
+}
+.dashboard-card,
+#flows-grid-container {
+  container-type: inline-size;
+  container-name: flowcardcontainer;
+}
+/* Cuando la tarjeta de flujo se achica (<= 640px) */
+@media (max-width: 640px) {
+  .desktop-only {
+    display: flex ;
+  }
+  .mobile-only {
+    display: none ;
+  }
+}
+
+@container flowcardcontainer (max-width: 440px) {
+  .desktop-only {
+    display: none !important; /* Oculta editar y eliminar directos */
+  }
+
+  .mobile-only {
+    display: flex !important; /* Activa el menú de 3 puntos (⋮) */
   }
 }
