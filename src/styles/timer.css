@@ -1,487 +1,141 @@
 /* src/styles/timer.css */
 
-/* Contenedor Principal Adaptable */
-.timer-container {
+.mini-widget-container {
+  width: 100vw;
+  height: 100vh;
+  background-color: #101014;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: space-between;
-  height: 100vh;
-  padding: clamp(1rem, 4vh, 2.5rem) 1.5rem;
+  padding: 0.7rem 0.9rem;
   box-sizing: border-box;
   overflow: hidden;
+  -webkit-user-select: none;
+  border: 1px solid #22222a;
 }
 
-/* Header: Título del Flujo y Puntos de Progreso */
-.timer-header {
+/* ENCABEZADO Y ZONA DE ARRASTRE */
+.mini-header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.6rem;
+  width: 100%;
+  cursor: grab;
 }
 
-.flow-title-upper {
-  font-size: 0.75rem;
-  letter-spacing: 0.25em;
-  color: var(--text-muted);
+.mini-header:active {
+  cursor: grabbing;
+}
+
+.mini-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: #1a1a22;
 }
 
-.block-dots {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.mini-badge.enfoque { color: var(--color-enfoque, #e5c158); border: 1px solid rgba(229, 193, 88, 0.3); }
+.mini-badge.descanso { color: var(--color-descanso, #60a5fa); border: 1px solid rgba(96, 165, 250, 0.3); }
+.mini-badge.movimiento { color: var(--color-movimiento, #4ade80); border: 1px solid rgba(74, 222, 128, 0.3); }
+.mini-badge.procrastinar { color: var(--color-procrastinar, #f87171); border: 1px solid rgba(248, 113, 113, 0.3); }
 
-.block-dots .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #26262b;
-  transition: all 0.3s ease;
-}
-
-.block-dots .dot.active {
-  transform: scale(1.3);
-}
-
-.block-dots .dot.enfoque.active { background-color: var(--color-enfoque); }
-.block-dots .dot.descanso.active { background-color: var(--color-descanso); }
-.block-dots .dot.movimiento.active { background-color: var(--color-movimiento); }
-.block-dots .dot.procrastinar.active { background-color: var(--color-procrastinar); }
-
-/* Reloj Circular Principal */
-.clock-stage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex: 1;
-  width: 100%;
-}
-
-.circle-clock {
-  position: relative;
-  /* Se adapta dinámicamente según el alto/ancho de la ventana */
-  width: clamp(210px, 38vh, 310px);
-  height: clamp(210px, 38vh, 310px);
-  border-radius: 50%;
-  border: 1px solid #1a1a1e;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* SVG de Marcas (Ticks) alrededor del reloj */
-.ticks-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-/* Aguja Dinámica y Arco */
-.needle-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.needle-hand {
-  position: absolute;
-  top: 10%;
-  left: 50%;
-  width: 2px;
-  height: 40%;
-  transform: translateX(-50%);
-  transform-origin: bottom center;
-  border-radius: 2px;
-}
-
-.circle-clock.enfoque .needle-hand { background: linear-gradient(to top, transparent, var(--color-enfoque)); }
-.circle-clock.descanso .needle-hand { background: linear-gradient(to top, transparent, var(--color-descanso)); }
-.circle-clock.movimiento .needle-hand { background: linear-gradient(to top, transparent, var(--color-movimiento)); }
-.circle-clock.procrastinar .needle-hand { background: linear-gradient(to top, transparent, var(--color-procrastinar)); }
-
-/* Información Central del Reloj */
-.center-time-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
-  z-index: 2;
-}
-
-.block-type-icon {
-  font-size: 1.2rem;
-  opacity: 0.8;
-}
-
-.time-digital {
-  font-family: var(--font-sans);
-  font-size: clamp(2.4rem, 6vh, 3.4rem);
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: var(--text-main);
-  margin: 0;
-  line-height: 1;
-}
-
-.block-type-name {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* Controles Inferiores (Stop, Play/Pause, Skip) */
-.timer-controls {
-  display: flex;
-  align-items: center;
-  gap: 1.8rem;
-  margin-bottom: 0.8rem;
-}
-
-.control-btn {
+.mini-close-btn {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: #777788;
+  font-size: 0.85rem;
   cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.mini-close-btn:hover {
+  color: #fff;
+  background-color: #22222c;
+}
+
+/* TIEMPO DIGITAL PRINCIPAL CON COLOR CARACTERÍSTICO */
+.mini-timer-time {
+  font-size: 2.2rem;
+  font-weight: 700;
+  font-family: system-ui, -apple-system, sans-serif;
+  text-align: center;
+  line-height: 1;
+  margin: 0.1rem 0;
+  letter-spacing: -0.02em;
+}
+
+.mini-timer-time.enfoque { color: var(--color-enfoque, #e5c158); }
+.mini-timer-time.descanso { color: var(--color-descanso, #60a5fa); }
+.mini-timer-time.movimiento { color: var(--color-movimiento, #4ade80); }
+.mini-timer-time.procrastinar { color: var(--color-procrastinar, #f87171); }
+
+/* PRÓXIMA ACCIÓN */
+.mini-next-info {
+  font-size: 0.72rem;
+  color: #888896;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  gap: 4px;
 }
 
-.control-btn:hover {
-  color: var(--text-main);
+/* FILA DE CONTROLES */
+.mini-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 0.2rem;
 }
 
-.side-btn {
-  width: 38px;
-  height: 38px;
+.mini-ctrl-btn {
+  background: transparent;
+  border: none;
+  color: #888896;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
 }
 
-/* Botón Central Circular Principal */
-.play-pause-btn {
-  width: clamp(52px, 8vh, 64px);
-  height: clamp(52px, 8vh, 64px);
+.mini-ctrl-btn:hover {
+  color: #fff;
+  background-color: #1e1e26;
+}
+
+.mini-play-btn {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background-color: #1a1712;
-  border: 1px solid var(--color-enfoque);
-  color: var(--color-enfoque);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
-
-.play-pause-btn:hover {
-  transform: scale(1.06);
-  background-color: var(--color-enfoque);
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
   color: #000;
 }
 
-/* Vista Previa del Siguiente Bloque */
-.next-block-preview {
-  font-size: 0.8rem;
-  color: var(--text-subtle);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
+.mini-play-btn.enfoque { background-color: var(--color-enfoque, #e5c158); }
+.mini-play-btn.descanso { background-color: var(--color-descanso, #60a5fa); }
+.mini-play-btn.movimiento { background-color: var(--color-movimiento, #4ade80); }
+.mini-play-btn.procrastinar { background-color: var(--color-procrastinar, #f87171); }
 
-.next-block-preview span {
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-/* --- AJUSTES PARA VENTANAS PEQUEÑAS / MODOS WIDGET --- */
-@media (max-height: 520px) {
-  .timer-container {
-    padding: 0.8rem;
-  }
-  .flow-title-upper {
-    font-size: 0.65rem;
-  }
-  .timer-controls {
-    margin-bottom: 0.3rem;
-    gap: 1.2rem;
-  }
-}
-/* Selector de Fase en Vivo */
-.live-phase-selector {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin: 0.8rem 0;
-}
-
-.phase-chip {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
-  color: var(--text-muted);
-  padding: 0.4rem 0.9rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.phase-chip:hover {
-  border-color: #333;
-  color: var(--text-main);
-}
-
-.phase-chip.active.enfoque { border-color: var(--color-enfoque); color: var(--color-enfoque); background-color: #1a1710; }
-.phase-chip.active.descanso { border-color: var(--color-descanso); color: var(--color-descanso); background-color: #10171a; }
-.phase-chip.active.movimiento { border-color: var(--color-movimiento); color: var(--color-movimiento); background-color: #101a14; }
-.phase-chip.active.procrastinar { border-color: var(--color-procrastinar); color: var(--color-procrastinar); background-color: #1a1014; }
-
-/* --- CRONÓMETRO LIBRE --- */
-.live-cronometer-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 2rem 3rem;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-
-.live-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.live-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.page-title-live {
-  font-size: 1.6rem;
-  margin: 0;
-  font-family: var(--font-serif);
-}
-
-.live-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  max-width: 620px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.digital-display-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 2rem;
-}
-
-.digital-clock-large {
-  font-size: clamp(3.8rem, 9vh, 5.2rem);
-  font-weight: 600;
-  letter-spacing: 4px;
-  color: var(--text-main);
-  margin: 0;
-  line-height: 1;
-}
-
-.clock-subtext {
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.clock-subtext.muted {
-  color: #55555e;
-}
-
-.clock-subtext.active-action.enfoque { color: var(--color-enfoque); }
-.clock-subtext.active-action.descanso { color: var(--color-descanso); }
-.clock-subtext.active-action.movimiento { color: var(--color-movimiento); }
-.clock-subtext.active-action.procrastinar { color: var(--color-procrastinar); }
-
-/* BARRA DINÁMICA DE PORCENTAJE */
-.live-bar-wrapper {
-  width: 100%;
-  margin-bottom: 2.5rem;
-}
-
-.live-bar-track {
-  width: 100%;
-  height: 8px;
-  background-color: #1a1a1e;
-  border-radius: 4px;
-  overflow: hidden;
-  display: flex;
-  transition: all 0.3s ease;
-}
-
-.live-bar-empty {
-  width: 100%;
-  height: 100%;
-  background-color: #1a1a1e;
-}
-
-.bar-segment {
-  height: 100%;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.bar-segment.enfoque { background-color: var(--color-enfoque); }
-.bar-segment.descanso { background-color: var(--color-descanso); }
-.bar-segment.movimiento { background-color: var(--color-movimiento); }
-.bar-segment.procrastinar { background-color: var(--color-procrastinar); }
-
-/* LEYENDA INFERIOR DE LA BARRA */
-.live-bar-legend {
-  display: flex;
-  gap: 1.2rem;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 0.9rem;
-}
-
-.legend-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-}
-
-.legend-chip.enfoque { color: var(--color-enfoque); }
-.legend-chip.descanso { color: var(--color-descanso); }
-.legend-chip.movimiento { color: var(--color-movimiento); }
-.legend-chip.procrastinar { color: var(--color-procrastinar); }
-
-/* GRILLA DE ACCIONES 2x2 */
-.action-grid-section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 2.5rem;
-}
-
-.grid-section-title {
-  font-size: 0.7rem;
-  letter-spacing: 0.25em;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.actions-grid-2x2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  width: 100%;
-}
-
-.action-card {
-  background-color: #141417;
-  border: 1px solid #222228;
-  border-radius: 16px;
-  padding: 1rem 1.2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-card:hover {
-  background-color: #1a1a1f;
-  border-color: #33333d;
-}
-
-.action-card.active-card {
-  background-color: #1a1a1f;
-}
-
-.action-card.active-card.enfoque { border-color: var(--color-enfoque); }
-.action-card.active-card.descanso { border-color: var(--color-descanso); }
-.action-card.active-card.movimiento { border-color: var(--color-movimiento); }
-.action-card.active-card.procrastinar { border-color: var(--color-procrastinar); }
-
-.card-left-content {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.card-text-col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
-}
-
-.card-title {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-main);
-}
-
-.card-time-spent {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  font-family: monospace;
-}
-
-.active-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-}
-
-.action-card.enfoque .active-dot { background-color: var(--color-enfoque); }
-.action-card.descanso .active-dot { background-color: var(--color-descanso); }
-.action-card.movimiento .active-dot { background-color: var(--color-movimiento); }
-.action-card.procrastinar .active-dot { background-color: var(--color-procrastinar); }
-
-/* CONTROLES INFERIORES */
-.live-footer-controls {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.control-icon-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.5rem;
-  transition: color 0.2s;
-}
-
-.control-icon-btn:hover {
-  color: var(--text-main);
-}
-
-.text-control-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 0.5rem;
-  transition: color 0.2s;
-}
-
-.text-control-btn:hover {
-  color: var(--text-main);
+.mini-play-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
 }

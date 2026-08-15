@@ -1,270 +1,195 @@
 // src/views/ActiveTimerView.ts
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
+import { Flow, Block } from '../models/flow.model';
+import { BLOCK_ICONS_SVG } from '../utils/icons';
 import { AudioService } from '../services/audio.service';
 import { TauriService } from '../services/tauri.service';
-import { Flow, BlockType } from '../models/flow.model';
-import { BLOCK_ICONS_SVG } from '../utils/icons';
-import { ModalService } from '../services/modal.service';
+
 
 export class ActiveTimerView {
-  private static timerInterval: number | null = null;
-  private static currentFlow: Flow | null = null;
+  private static flow: Flow | null = null;
   private static currentBlockIndex: number = 0;
-  
-  // Variables del Motor de Tiempo Preciso
-  private static totalBlockSeconds: number = 0;
-  private static remainingSeconds: number = 0;
-  private static endTime: number = 0;
-  private static isPaused: boolean = false;
+  private static timeRemainingSeconds: number = 0;
+  private static timerInterval: number | null = null;
+  private static isRunning: boolean = true;
+  private static router: AppRouter;
 
   static render(router: AppRouter, params: Record<string, unknown> = {}): HTMLElement {
+    this.router = router;
     const view = document.createElement('div');
-    view.className = 'timer-container';
+    view.className = 'mini-widget-container';
+    view.setAttribute('data-tauri-drag-region', 'true');
+
+    // Activar modo mini flotante en Tauri
+    TauriService.enterMiniMode();
 
     const flowId = params.flowId as string;
     const flows = StorageService.getFlows();
-    this.currentFlow = flows.find(f => f.id === flowId) || null;
+    this.flow = flows.find(f => f.id === flowId) || flows[0] || null;
 
-    if (!this.currentFlow || this.currentFlow.blocks.length === 0) {
-      alert('Flujo no encontrado.');
-      router.navigate('home');
+    if (!this.flow || this.flow.blocks.length === 0) {
+      this.exitToHome();
       return view;
     }
 
     this.currentBlockIndex = 0;
-    this.isPaused = false;
-    this.setupCurrentBlock();
+    this.initCurrentBlock();
 
-    this.renderLayout(view, router);
-    this.startTimer(view, router);
+    this.renderWidget(view);
+    this.startTimer(view);
 
     return view;
   }
 
-  private static setupCurrentBlock() {
-    if (!this.currentFlow) return;
-    const block = this.currentFlow.blocks[this.currentBlockIndex];
-    this.totalBlockSeconds = block.durationMinutes * 60;
-    this.remainingSeconds = this.totalBlockSeconds;
-    this.resetTargetEndTime();
+  private static initCurrentBlock() {
+    if (!this.flow) return;
+    const block = this.flow.blocks[this.currentBlockIndex];
+    this.timeRemainingSeconds = block.durationMinutes * 60;
   }
 
-  private static resetTargetEndTime() {
-    // La hora de finalización exacta = Hora actual + Segundos restantes acumulados
-    this.endTime = Date.now() + this.remainingSeconds * 1000;
-  }
-
-  private static renderLayout(view: HTMLElement, router: AppRouter) {
-    if (!this.currentFlow) return;
-
-    const currentBlock = this.currentFlow.blocks[this.currentBlockIndex];
-    const nextBlock = this.currentFlow.blocks[this.currentBlockIndex + 1];
-
-    const typeNames: Record<BlockType, string> = {
-      ENFOQUE: 'Enfoque',
-      DESCANSO: 'Descanso',
-      MOVIMIENTO: 'Movimiento',
-      PROCRASTINAR: 'Procrastinar'
-    };
-
-    const elapsedSeconds = this.totalBlockSeconds - this.remainingSeconds;
-    const rotationDegrees = (elapsedSeconds / this.totalBlockSeconds) * 360;
-
-    const minutes = Math.floor(this.remainingSeconds / 60).toString().padStart(2, '0');
-    const seconds = (this.remainingSeconds % 60).toString().padStart(2, '0');
+  private static renderWidget(view: HTMLElement) {
+    if (!this.flow) return;
+    const currentBlock = this.flow.blocks[this.currentBlockIndex];
+    const nextBlock: Block | undefined = this.flow.blocks[this.currentBlockIndex + 1];
+    const blockTypeLower = currentBlock.type.toLowerCase();
 
     view.innerHTML = `
-      <header class="timer-header">
-        <span class="flow-title-upper">FLUJO — ${this.currentFlow.name}</span>
-        <div class="block-dots">
-          ${this.currentFlow.blocks.map((b, idx) => `
-            <span class="dot ${b.type.toLowerCase()} ${idx === this.currentBlockIndex ? 'active' : ''}"></span>
-          `).join('')}
+      <!-- Encabezado con soporte Drag para mover la mini-ventana -->
+      <div class="mini-header" data-tauri-drag-region="true">
+        <div class="mini-badge ${blockTypeLower}">
+          ${BLOCK_ICONS_SVG[currentBlock.type]}
+          <span>${currentBlock.type.charAt(0) + currentBlock.type.slice(1).toLowerCase()}</span>
         </div>
-      </header>
-
-      <main class="clock-stage">
-        <div class="circle-clock ${currentBlock.type.toLowerCase()}">
-          <svg class="ticks-svg" viewBox="0 0 100 100">
-            ${Array.from({ length: 12 }).map((_, i) => {
-              const angle = i * 30;
-              return `<line x1="50" y1="6" x2="50" y2="9" stroke="#2a2a30" stroke-width="1" transform="rotate(${angle} 50 50)" />`;
-            }).join('')}
-          </svg>
-
-          <div class="needle-wrapper" style="transform: rotate(${rotationDegrees}deg);">
-            <div class="needle-hand"></div>
-          </div>
-
-          <div class="center-time-display">
-            <span class="block-type-icon">${BLOCK_ICONS_SVG[currentBlock.type]}</span>
-            <h1 class="time-digital">${minutes}:${seconds}</h1>
-            <span class="block-type-name">${typeNames[currentBlock.type]}</span>
-          </div>
+        <div class="mini-actions">
+          <button class="mini-close-btn" id="btn-close-mini" title="Cerrar y volver al inicio">✕</button>
         </div>
-      </main>
+      </div>
 
-      <footer class="timer-controls">
-        <button class="control-btn side-btn" id="btn-stop" title="Detener">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="5" y="5" width="14" height="14" rx="2" />
-          </svg>
-        </button>
+      <!-- Tiempo digital con color característico -->
+      <div class="mini-timer-time ${blockTypeLower}" id="mini-time-text">
+        ${this.formatTime(this.timeRemainingSeconds)}
+      </div>
 
-        <button class="control-btn play-pause-btn" id="btn-toggle-pause">
-          ${this.isPaused ? `
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          ` : `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" rx="1" />
-              <rect x="14" y="4" width="4" height="16" rx="1" />
-            </svg>
-          `}
-        </button>
-
-        <button class="control-btn side-btn" id="btn-skip" title="Siguiente bloque">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 4l10 8-10 8V4z" fill="currentColor" />
-            <line x1="19" y1="5" x2="19" y2="19" stroke-width="2.5" stroke-linecap="round" />
-          </svg>
-        </button>
-      </footer>
-
-      <div class="next-block-preview">
+      <!-- Próxima acción -->
+      <div class="mini-next-info">
         ${nextBlock ? `
-          Siguiente: <span>${BLOCK_ICONS_SVG[nextBlock.type]} ${typeNames[nextBlock.type]} ${nextBlock.durationMinutes}m</span>
-        ` : `
-          <span>Último bloque del flujo</span>
-        `}
+          <span>Siguiente:</span>
+          <span style="display:inline-flex; align-items:center; gap:3px;">
+            ${BLOCK_ICONS_SVG[nextBlock.type]} ${nextBlock.type.charAt(0) + nextBlock.type.slice(1).toLowerCase()} (${nextBlock.durationMinutes}m)
+          </span>
+        ` : '<span>Último bloque del flujo</span>'}
+      </div>
+
+      <!-- Controles esenciales -->
+      <div class="mini-controls-row">
+        <button class="mini-ctrl-btn" id="btn-reset-block" title="Reiniciar bloque">↺</button>
+        <button class="mini-play-btn ${blockTypeLower}" id="btn-toggle-play" title="${this.isRunning ? 'Pausar' : 'Reanudar'}">
+          ${this.isRunning ? '⏸' : '▶'}
+        </button>
+        <button class="mini-ctrl-btn" id="btn-skip-block" title="Siguiente bloque">⏭</button>
       </div>
     `;
 
-    this.bindEvents(view, router);
+    this.bindEvents(view);
   }
 
-  private static startTimer(view: HTMLElement, router: AppRouter) {
-    this.clearTimer();
-
-    // Verificamos con frecuencia alta (250ms) comparando la hora real del sistema
-    this.timerInterval = window.setInterval(async () => {
-      if (this.isPaused) return;
-
-      const now = Date.now();
-      const secondsLeft = Math.max(0, Math.ceil((this.endTime - now) / 1000));
-
-      if (secondsLeft !== this.remainingSeconds) {
-        this.remainingSeconds = secondsLeft;
-        this.updateClockUI(view);
-      }
-
-      if (secondsLeft <= 0) {
-        const completedBlock = this.currentFlow!.blocks[this.currentBlockIndex];
-        const nextBlock = this.currentFlow!.blocks[this.currentBlockIndex + 1];
-
-        // Sonido armónico limpio
-        AudioService.playBlockEndSound(completedBlock.type);
-
-        // Notificación de SO
-        TauriService.notifyBlockFinished(
-            `¡Bloque de ${completedBlock.type.toLowerCase()} completado!`,
-            `Siguiente: ${nextBlock.type} (${nextBlock.durationMinutes}m)`
-          );
-
-        if (this.currentBlockIndex < this.currentFlow!.blocks.length - 1) {
-          this.currentBlockIndex++;
-          this.setupCurrentBlock();
-          this.renderLayout(view, router);
-        } else {
-          this.clearTimer();
-          this.saveCompletedSession();
-
-          AudioService.playFlowCompleteSound();
-
-          // 2. Notificación del Sistema Operativo
-          TauriService.notifyBlockFinished(
-            '¡Flujo finalizado!',
-            'Has completado con éxito todos los bloques programados.'
-          );
-
-          // 3. Modal Personalizado con diseño oscuro
-          await ModalService.alert(
-            '¡Flujo completado!',
-            'Has completado con éxito todas las fases de este flujo.',
-            '🎉'
-          );
-
-          router.navigate('home');
-        }
-      }
-    }, 250);
-  }
-
-  private static updateClockUI(view: HTMLElement) {
-    const elapsedSeconds = this.totalBlockSeconds - this.remainingSeconds;
-    const rotationDegrees = (elapsedSeconds / this.totalBlockSeconds) * 360;
-
-    const minutes = Math.floor(this.remainingSeconds / 60).toString().padStart(2, '0');
-    const seconds = (this.remainingSeconds % 60).toString().padStart(2, '0');
-
-    const digital = view.querySelector('.time-digital');
-    const needle = view.querySelector('.needle-wrapper') as HTMLElement;
-
-    if (digital) digital.textContent = `${minutes}:${seconds}`;
-    if (needle) needle.style.transform = `rotate(${rotationDegrees}deg)`;
-  }
-
-  private static bindEvents(view: HTMLElement, router: AppRouter) {
-    view.querySelector('#btn-toggle-pause')?.addEventListener('click', () => {
-      this.isPaused = !this.isPaused;
-
-      if (!this.isPaused) {
-        // Al reanudar, recalculamos el tiempo final proyectado
-        this.resetTargetEndTime();
-      }
-
-      this.renderLayout(view, router);
+  private static bindEvents(view: HTMLElement) {
+    // Cerrar / Detener y restaurar tamaño
+    view.querySelector('#btn-close-mini')?.addEventListener('click', () => {
+      this.stopTimer();
+      this.exitToHome();
     });
 
-    view.querySelector('#btn-skip')?.addEventListener('click', () => {
-      if (this.currentFlow && this.currentBlockIndex < this.currentFlow.blocks.length - 1) {
-        this.currentBlockIndex++;
-        this.setupCurrentBlock();
-        this.renderLayout(view, router);
+    // Play / Pausa
+    view.querySelector('#btn-toggle-play')?.addEventListener('click', () => {
+      this.isRunning = !this.isRunning;
+      const playBtn = view.querySelector('#btn-toggle-play');
+      if (playBtn) playBtn.textContent = this.isRunning ? '⏸' : '▶';
+    });
+
+    // Reiniciar bloque actual
+    view.querySelector('#btn-reset-block')?.addEventListener('click', () => {
+      this.initCurrentBlock();
+      this.updateTimeDisplay(view);
+    });
+
+    // Saltar al siguiente bloque
+    view.querySelector('#btn-skip-block')?.addEventListener('click', () => {
+      this.nextBlock(view);
+    });
+  }
+
+  private static startTimer(view: HTMLElement) {
+    this.stopTimer();
+    this.isRunning = true;
+
+    this.timerInterval = window.setInterval(() => {
+      if (!this.isRunning) return;
+
+      if (this.timeRemainingSeconds > 0) {
+        this.timeRemainingSeconds--;
+        this.updateTimeDisplay(view);
       } else {
-        this.clearTimer();
-        this.saveCompletedSession();
-        router.navigate('home');
+        AudioService.playNotificationSound();
+        const currentBlock = this.flow?.blocks[this.currentBlockIndex];
+        if (currentBlock) {
+          TauriService.notifyBlockFinished(
+            '¡Bloque completado!',
+            `Has terminado ${currentBlock.type.toLowerCase()} de ${currentBlock.durationMinutes}m.`
+          );
+        }
+        this.nextBlock(view);
       }
-    });
-
-    view.querySelector('#btn-stop')?.addEventListener('click', () => {
-      this.clearTimer();
-      router.navigate('home');
-    });
+    }, 1000);
   }
 
-  private static clearTimer() {
-    if (this.timerInterval) {
+  private static nextBlock(view: HTMLElement) {
+    if (!this.flow) return;
+
+    if (this.currentBlockIndex < this.flow.blocks.length - 1) {
+      this.currentBlockIndex++;
+      this.initCurrentBlock();
+      this.renderWidget(view);
+    } else {
+      // Fin del flujo completo
+      this.stopTimer();
+      StorageService.recordSession({
+        id: crypto.randomUUID(),
+        flowId: this.flow.id,
+        flowName: this.flow.name,
+        completedAt: new Date().toISOString(),
+        totalDurationMinutes: this.flow.blocks.reduce((acc, b) => acc + b.durationMinutes, 0)
+      });
+      AudioService.playNotificationSound();
+      TauriService.notifyBlockFinished('¡Flujo terminado!', `Has completado "${this.flow.name}". ¡Excelente trabajo!`);
+      this.exitToHome();
+    }
+  }
+
+  private static updateTimeDisplay(view: HTMLElement) {
+    const timeText = view.querySelector('#mini-time-text');
+    if (timeText) {
+      timeText.textContent = this.formatTime(this.timeRemainingSeconds);
+    }
+  }
+
+  private static stopTimer() {
+    if (this.timerInterval !== null) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
   }
 
-  private static saveCompletedSession() {
-    if (!this.currentFlow) return;
-    const totalMin = this.currentFlow.blocks.reduce((acc, b) => acc + b.durationMinutes, 0);
+  private static async exitToHome() {
+    this.stopTimer();
+    await TauriService.exitMiniMode();
+    this.router.navigate('home');
+  }
 
-    StorageService.addHistoryEntry({
-      id: crypto.randomUUID(),
-      flowId: this.currentFlow.id,
-      flowName: this.currentFlow.name,
-      totalDurationMinutes: totalMin,
-      completedBlocks: this.currentFlow.blocks.length,
-      totalBlocks: this.currentFlow.blocks.length,
-      completedAt: new Date().toISOString()
-    });
+  private static formatTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 }
