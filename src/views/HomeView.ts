@@ -292,12 +292,18 @@ export class HomeView {
     view.querySelector('#btn-empty-create-flow')?.addEventListener('click', () => {
       router.navigate('flow-editor');
     });
-    
-    view.querySelector('#btn-edit-daily-goal')?.addEventListener('click', async () => {
+
+    view.querySelector('#btn-edit-daily-goal')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
       const currentGoal = StorageService.getDailyGoal();
-      const input = prompt('Ingresa tu nuevo objetivo diario en minutos:', currentGoal.toString());
-      if (input !== null) {
-        const newGoal = parseInt(input.trim(), 10);
+      const input = await ModalService.prompt(
+        'Objetivo diario',
+        'Ingresa tu nuevo objetivo en minutos:',
+        currentGoal.toString(),
+        '🎯'
+      );
+        if (input !== null) {
+        const newGoal = parseInt(input, 10);
         if (!isNaN(newGoal) && newGoal > 0) {
           StorageService.setDailyGoal(newGoal);
           router.navigate('home');

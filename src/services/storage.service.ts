@@ -1,6 +1,7 @@
 import { UserProfile } from '../models/user.model';
 import { Flow } from '../models/flow.model';
 import { SessionHistory } from '../models/session.model';
+import { BlockType } from '../models/flow.model';
 
 const KEYS = {
   USER: 'focus_flow_user',
@@ -18,6 +19,7 @@ export interface HistoryItem {
   flowName: string;
   completedAt: string;
   totalDurationMinutes: number;
+  breakdown?: Record<BlockType, number>;
 }
 
 export class StorageService {
@@ -55,6 +57,7 @@ export class StorageService {
     const data = localStorage.getItem('focus_flow_history');
     return data ? JSON.parse(data) : [];
   }
+  
 
   static addHistoryEntry(entry: SessionHistory): void {
     const history = this.getHistory();
@@ -94,11 +97,28 @@ export class StorageService {
     this.saveTasks(tasks);
     return tasks;
   }
-  
 
   static recordSession(session: HistoryItem): void {
     const history = this.getHistory();
     history.unshift(session);
     localStorage.setItem('focus_flow_history', JSON.stringify(history));
   }
+  static getDailyGoal(): number {
+    const goal = localStorage.getItem('focus_flow_daily_goal');
+    return goal ? parseInt(goal, 10) : 30; // 30 minutos por defecto
+  }
+
+  static setDailyGoal(minutes: number): void {
+    localStorage.setItem('focus_flow_daily_goal', minutes.toString());
+  }
+  // --- FECHA DE INICIO DE LA APLICACIÓN ---
+  static getAppStartDate(): Date {
+    let start = localStorage.getItem('focus_flow_app_start_date');
+    if (!start) {
+      start = new Date().toISOString();
+      localStorage.setItem('focus_flow_app_start_date', start);
+    }
+    return new Date(start);
+  }
+  
 }

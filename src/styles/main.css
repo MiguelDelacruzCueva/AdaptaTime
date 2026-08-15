@@ -1148,3 +1148,150 @@ html, body {
   line-height: 1.5;
   margin: 0;
 }
+/* --- ESTILOS DEL MODAL PERSONALIZADO --- */
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.72);
+  /* -webkit-backdrop-filter: blur(4px); */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: modalFadeIn 0.2s ease forwards;
+}
+
+.custom-modal-overlay.fade-out {
+  animation: modalFadeOut 0.15s ease forwards;
+}
+
+.custom-modal-box {
+  background-color: #141418;
+  border: 1px solid #282832;
+  border-radius: 18px;
+  padding: 1.8rem 1.6rem;
+  width: 90%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  transform: scale(0.95);
+  animation: modalPopIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.modal-icon-header {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-title {
+  font-family: var(--font-serif, serif);
+  font-size: 1.35rem;
+  color: var(--text-main, #fff);
+  margin: 0 0 0.4rem 0;
+}
+
+.modal-message {
+  font-size: 0.85rem;
+  color: var(--text-muted, #888896);
+  line-height: 1.4;
+  margin: 0 0 1.2rem 0;
+}
+
+.modal-input-field-wrap {
+  width: 100%;
+  margin-bottom: 1.4rem;
+}
+
+.modal-prompt-input {
+  width: 100%;
+  background-color: #1a1a22;
+  border: 1px solid #333340;
+  border-radius: 10px;
+  color: var(--text-main, #fff);
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.6rem 0.8rem;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.modal-prompt-input:focus {
+  border-color: var(--color-enfoque, #e5c158);
+}
+
+.modal-actions-row {
+  display: flex;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+.modal-actions-row.single {
+  justify-content: center;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.modal-btn-cancel {
+  background-color: #202028;
+  color: #9999a8;
+}
+
+.modal-btn-cancel:hover {
+  background-color: #282834;
+  color: #fff;
+}
+
+.modal-btn-confirm {
+  background-color: var(--color-enfoque, #e5c158);
+  color: #000;
+}
+
+.modal-btn-confirm:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes modalPopIn { from { transform: scale(0.92); } to { transform: scale(1); } }
+
+/* --- FIX PARA MODAL PROMPT Y INPUT SIN FLECHAS --- */
+.modal-prompt-input::-webkit-outer-spin-button,
+.modal-prompt-input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+.modal-prompt-input {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+.custom-modal-overlay {
+  pointer-events: auto !important;
+}
+
+.custom-modal-box {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10000;
+}
+
+.modal-btn {
+  pointer-events: auto ;
+  -webkit-user-select: none;
+}

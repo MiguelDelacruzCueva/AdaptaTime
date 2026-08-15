@@ -1,121 +1,289 @@
-/* src/styles/calendar.css */
+/* --- ESTILOS DEL CALENDARIO Y REPORTES --- */
 .calendar-page-container {
-  padding: 2.5rem 3rem;
-  height: 100vh;
-  box-sizing: border-box;
+  padding: 1.5rem 2rem;
+  max-width: 1080px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  gap: 1.5rem;
+  box-sizing: border-box;
 }
 
-.section-top-bar {
+.calendar-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.calendar-main-title {
+  font-family: var(--font-serif, serif);
+  font-size: 2rem;
+  margin: 0;
+  color: var(--text-main, #fff);
+}
+
+.calendar-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .calendar-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calendar-box-card, .activity-report-card {
+  background-color: #141417;
+  border: 1px solid #22222a;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+/* NAVEGACIÓN DE MES */
+.calendar-month-selector {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.2rem;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.page-title {
+.month-name-big {
+  font-family: var(--font-serif, serif);
   font-size: 1.8rem;
-  margin: 0;
+  font-weight: 500;
+  color: var(--text-main, #fff);
 }
 
-.month-title-wrapper {
-  margin-bottom: 1.5rem;
+.year-name-muted {
+  font-size: 1rem;
+  color: #777788;
+  margin-left: 0.4rem;
 }
 
-.month-name {
-  font-size: 1.8rem;
-  margin: 0;
+.icon-btn-pill {
+  background-color: #1a1a20;
+  border: 1px solid #2a2a34;
+  color: #bbb;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.year-text {
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  font-weight: 300;
+.icon-btn-pill:hover:not([disabled]) {
+  background-color: #262632;
+  color: #fff;
 }
 
-.calendar-grid {
+/* GRILLA DE DÍAS */
+.weekdays-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.8rem;
-  max-width: 420px;
-  margin-bottom: 2.5rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #777788;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.6rem;
 }
 
-.day-header {
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 600;
-  padding-bottom: 0.5rem;
+.days-grid-matrix {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
 }
 
 .day-cell {
-  height: 44px;
+  aspect-ratio: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  color: var(--text-main);
-  background-color: #0e0e11;
+  background-color: #1a1a20;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: #ddd;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
 }
 
-.day-cell.active-today {
-  background-color: var(--bg-card);
-  border: 1px solid var(--color-enfoque);
-  color: var(--color-enfoque);
+.day-cell:hover {
+  border-color: #444455;
+  background-color: #202028;
+}
+
+.day-cell.today {
+  border-color: rgba(229, 193, 88, 0.4);
+}
+
+.day-cell.selected {
+  border-color: var(--color-enfoque, #e5c158) !important;
+  background-color: rgba(229, 193, 88, 0.12) !important;
+  color: var(--color-enfoque, #e5c158);
   font-weight: 600;
 }
 
-.activity-report-card {
-  background-color: var(--bg-card);
-  border-radius: 18px;
-  padding: 1.5rem;
-  max-width: 500px;
-  border: 1px solid var(--border-card);
+.day-cell.empty-cell {
+  background: transparent;
+  cursor: default;
 }
 
-.activity-report-card h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
+.activity-pip {
+  width: 4px;
+  height: 4px;
+  background-color: var(--color-enfoque, #e5c158);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 5px;
 }
 
-.activity-report-card p {
-  margin: 0 0 1.2rem 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.category-legend {
+/* REPORTES Y MÉTRICAS */
+.report-header-row {
   display: flex;
-  gap: 1.2rem;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.2rem;
+}
+
+.report-subtitle-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  color: #777788;
+  font-weight: 600;
+}
+
+.report-date-title {
+  margin: 0.2rem 0 0 0;
+  font-size: 1.2rem;
+  color: var(--text-main, #fff);
+}
+
+.goal-status-badge {
+  font-size: 0.78rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.goal-status-badge.goal-met {
+  background-color: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.goal-status-badge.goal-pending {
+  background-color: #1a1a20;
+  border: 1px solid #2a2a34;
+  color: #888896;
+}
+
+.report-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background-color: #191920;
+  border: 1px solid #24242e;
+  border-radius: 12px;
+  padding: 0.8rem;
+  text-align: center;
+}
+
+.kpi-val {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.1rem;
+}
+
+.kpi-lbl {
+  font-size: 0.72rem;
+  color: #777788;
+}
+
+/* GRÁFICO DE BARRAS SEGMENTADO */
+.section-micro-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  color: #777788;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.stacked-bar-container {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.stacked-bar-track {
+  width: 100%;
+  height: 14px;
+  background-color: #1a1a20;
+  border-radius: 7px;
+  overflow: hidden;
+  display: flex;
+}
+
+.stacked-bar-empty {
+  height: 14px;
+  background-color: #1a1a20;
+  border-radius: 7px;
+  font-size: 0.68rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bar-slice.enfoque { background-color: var(--color-enfoque, #e5c158); }
+.bar-slice.descanso { background-color: var(--color-descanso, #60a5fa); }
+.bar-slice.movimiento { background-color: var(--color-movimiento, #4ade80); }
+.bar-slice.procrastinar { background-color: var(--color-procrastinar, #f87171); }
+
+/* LEYENDA */
+.breakdown-legend-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  gap: 0.6rem;
+  background-color: #191920;
+  border: 1px solid #22222a;
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
 }
 
-.legend-item .dot {
+.legend-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
 }
 
-.legend-item .dot.enfoque { background-color: var(--color-enfoque); }
-.legend-item .dot.descanso { background-color: var(--color-descanso); }
-.legend-item .dot.movimiento { background-color: var(--color-movimiento); }
-.legend-item .dot.procrastinar { background-color: var(--color-procrastinar); }
+.legend-item.enfoque .legend-dot { background-color: var(--color-enfoque, #e5c158); }
+.legend-item.descanso .legend-dot { background-color: var(--color-descanso, #60a5fa); }
+.legend-item.movimiento .legend-dot { background-color: var(--color-movimiento, #4ade80); }
+.legend-item.procrastinar .legend-dot { background-color: var(--color-procrastinar, #f87171); }
+
+.legend-texts {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.8rem;
+  color: #ddd;
+}
