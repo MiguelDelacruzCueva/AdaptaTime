@@ -1,9 +1,10 @@
-// src/views/HomeView.ts
+// En src/views/HomeView.ts
 import { AppRouter } from '../app';
 import { StorageService, TaskItem } from '../services/storage.service';
 import { Flow, BlockType } from '../models/flow.model';
-import { BLOCK_ICONS_SVG } from '../utils/icons';
+import { BLOCK_ICONS_SVG, UI_ICONS } from '../utils/icons';
 import { ModalService } from '../services/modal.service';
+import { formatMinutesReadable } from '../utils/format';
 
 export class HomeView {
   private static isEditingName: boolean = false;
@@ -32,29 +33,24 @@ export class HomeView {
 
     view.innerHTML = `
       <div class="dashboard-grid">
-        <!-- COLUMNA IZQUIERDA: ENCABEZADO SALUDO, FLUJOS Y TAREAS -->
+        <!-- COLUMNA IZQUIERDA -->
         <div class="main-column" style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0;">
           
-          <!-- SECCIÓN DE SALUDO DINÁMICO CON EDICIÓN -->
+          <!-- SALUDO CON EDICIÓN -->
           <div class="greeting-header-section">
             <span class="greeting-subtitle-label">${greetingText}</span>
             
             ${!this.isEditingName ? `
               <div class="greeting-name-row">
                 <h2 class="greeting-user-name">${userName}</h2>
-                <button class="icon-btn" id="btn-edit-name" title="Editar nombre" style="font-size: 0.9rem; opacity: 0.7;">
-                  <svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"></path>
-                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-                  </svg>
-                </button>
+                <button class="icon-btn" id="btn-edit-name" title="Editar nombre" style="opacity: 0.7;">${UI_ICONS.edit}</button>
               </div>
             ` : `
               <div class="inline-name-edit-container">
                 <div class="inline-name-input-row">
-                  <input type="text" id="input-edit-username" class="inline-name-input" value="${userName}" maxlength="20" placeholder="Tu nombre..." autocomplete="off"/>
-                  <button class="icon-btn" id="btn-save-name" title="Guardar" style="color: var(--color-enfoque, #e5c158);">✓</button>
-                  <button class="icon-btn" id="btn-cancel-name" title="Cancelar">✕</button>
+                  <input type="text" id="input-edit-username" class="inline-name-input" value="${userName}" maxlength="20" placeholder="Tu nombre..." autocomplete="off" />
+                  <button class="icon-btn" id="btn-save-name" title="Guardar" style="color: var(--color-enfoque, #e5c158);">${UI_ICONS.check}</button>
+                  <button class="icon-btn" id="btn-cancel-name" title="Cancelar">${UI_ICONS.close}</button>
                 </div>
                 <button class="link-back-welcome" id="btn-back-onboarding">
                   ← Volver a la bienvenida
@@ -67,12 +63,11 @@ export class HomeView {
           <div class="dashboard-card" style="min-width: 0;">
             <div class="card-header-row">
               <h3 class="card-header-title">
-                 MIS FLUJOS
+                <span style="color: var(--color-enfoque, #e5c158); display: inline-flex;">${BLOCK_ICONS_SVG.ENFOQUE}</span> MIS FLUJOS
               </h3>
               
             </div>
 
-            <!-- Buscador + Botón (+) -->
             <div class="search-row-container" style="display: flex; gap: 0.6rem; align-items: center; margin-bottom: 1rem;">
               <div class="search-bar-wrapper" style="flex: 1; margin-bottom: 0;">
                 <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -81,14 +76,11 @@ export class HomeView {
                 <input type="text" id="input-search-flows" class="search-input" placeholder="Buscar flujo por nombre..." autocomplete="off" />
               </div>
 
-              <button class="btn-gold-pill btn-add-flow-circle" id="btn-create-flow" title="Nuevo flujo">
-                +
-              </button>
+              <button class="btn-gold-pill btn-add-flow-circle" id="btn-create-flow" title="Nuevo flujo">+</button>
             </div>
 
             <div class="flows-grid" id="flows-grid-container" style="max-height: 380px; overflow-y: auto;">
               ${flows.length === 0 ? `
-                <!-- TARJETA "CREA TU PRIMER FLUJO" RECUPERADA -->
                 <div class="empty-hero-card">
                   <div class="color-dots-4-row">
                     <span class="dot enfoque"></span>
@@ -112,7 +104,7 @@ export class HomeView {
           <div class="dashboard-card" style="min-width: 0;">
             <div class="card-header-row">
               <h3 class="card-header-title">
-                <span>☑</span> TAREAS DE LA SESIÓN
+                <span style="display: inline-flex;">${UI_ICONS.check}</span> TAREAS DE LA SESIÓN
               </h3>
             </div>
 
@@ -128,15 +120,13 @@ export class HomeView {
 
         </div>
 
-        <!-- COLUMNA DERECHA: PROGRESO DIARIO -->
+        <!-- COLUMNA DERECHA -->
         <div class="side-column" style="display: flex; flex-direction: column; gap: 1.5rem;">
           <div class="dashboard-card">
             <div class="card-header-row">
               <h3 class="card-header-title">Progreso diario</h3>
-              <button class="icon-btn" id="btn-edit-daily-goal" title="Modificar objetivo diario" style="font-size: 0.9rem; opacity: 0.7;">
-                <svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"></path>
-                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+              <button class="icon-btn" id="btn-edit-daily-goal" title="Modificar objetivo diario" style="opacity: 0.7;">
+                ${UI_ICONS.edit}
               </button>
             </div>
 
@@ -156,9 +146,9 @@ export class HomeView {
               </svg>
 
               <div class="ring-center-info">
-                <span class="ring-goal-title">Objetivo diario</span>
-                <span class="ring-goal-value">${todayMinutes}</span>
-                <span class="ring-goal-unit">de ${goalMinutes} minutos</span>
+               <span class="ring-goal-title">Objetivo diario</span>
+               <span class="ring-goal-value">${formatMinutesReadable(todayMinutes)}</span>
+               <span class="ring-goal-unit">de ${formatMinutesReadable(goalMinutes)}</span>
               </div>
             </div>
 
@@ -206,7 +196,7 @@ export class HomeView {
     const breakdownHTML = (Object.keys(totals) as BlockType[])
       .filter(type => totals[type] > 0)
       .map(type => `
-        <span class="meta-item">
+        <span class="meta-item ${type.toLowerCase()}">
           ${BLOCK_ICONS_SVG[type]}
           <span>${totals[type]}m</span>
         </span>
@@ -228,18 +218,22 @@ export class HomeView {
         </div>
 
         <div class="flow-actions-right">
-          <span class="total-duration">${totalMinutes}m</span>
+          <span class="total-duration">${formatMinutesReadable(totalMinutes)}</span>
 
-          <button class="icon-btn edit-flow-btn desktop-only" data-edit-id="${flow.id}" title="Editar">✏️</button>
-          <button class="icon-btn delete-flow-btn desktop-only" data-delete-id="${flow.id}" title="Eliminar">🗑️</button>
+          <button class="icon-btn edit-flow-btn desktop-only" data-edit-id="${flow.id}" title="Editar">${UI_ICONS.edit}</button>
+          <button class="icon-btn delete-flow-btn desktop-only" data-delete-id="${flow.id}" title="Eliminar">${UI_ICONS.trash}</button>
 
-          <button class="play-btn" data-play-id="${flow.id}" title="Iniciar">▶</button>
+          <button class="play-btn" data-play-id="${flow.id}" title="Iniciar">${UI_ICONS.play}</button>
 
           <div class="flow-menu-wrapper mobile-only">
-            <button class="icon-btn btn-flow-menu" data-menu-id="${flow.id}" title="Opciones">⋮</button>
+            <button class="icon-btn btn-flow-menu" data-menu-id="${flow.id}" title="Opciones">${UI_ICONS.menuDots}</button>
             <div class="flow-menu-popover" id="popover-${flow.id}">
-              <button class="popover-item edit-flow-btn" data-edit-id="${flow.id}">✏️ Editar</button>
-              <button class="popover-item delete-flow-btn" data-delete-id="${flow.id}">🗑️ Eliminar</button>
+              <button class="popover-item edit-flow-btn" data-edit-id="${flow.id}">
+                ${UI_ICONS.edit} Editar
+              </button>
+              <button class="popover-item delete-flow-btn" data-delete-id="${flow.id}">
+                ${UI_ICONS.trash} Eliminar
+              </button>
             </div>
           </div>
         </div>
@@ -252,17 +246,16 @@ export class HomeView {
       <div class="task-item-row ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
         <div class="task-content-wrapper">
           <div class="task-check-circle" data-check-id="${task.id}">
-            ${task.completed ? '✓' : ''}
+            ${task.completed ? UI_ICONS.check : ''}
           </div>
           <span class="task-title-text" title="${task.title}">${task.title}</span>
         </div>
-        <button class="icon-btn btn-delete-task" data-del-task="${task.id}" style="opacity:0.6;">✕</button>
+        <button class="icon-btn btn-delete-task" data-del-task="${task.id}" style="opacity:0.6;">${UI_ICONS.close}</button>
       </div>
     `;
   }
 
   private static bindEvents(view: HTMLElement, router: AppRouter) {
-    // --- LÓGICA DE EDICIÓN DE NOMBRE Y BIENVENIDA ---
     view.querySelector('#btn-edit-name')?.addEventListener('click', () => {
       this.isEditingName = true;
       router.navigate('home');
@@ -275,7 +268,7 @@ export class HomeView {
 
     view.querySelector('#btn-save-name')?.addEventListener('click', () => {
       const input = view.querySelector('#input-edit-username') as HTMLInputElement;
-      const newName = input ? input.value.trim() : '';
+      const newName = input ? input.value.trim().slice(0, 20) : '';
       if (newName) {
         StorageService.saveUser(newName);
       }
@@ -288,30 +281,31 @@ export class HomeView {
       router.navigate('onboarding');
     });
 
-    // --- EVENTO CREAR PRIMER FLUJO DESDE TARJETA VACÍA ---
     view.querySelector('#btn-empty-create-flow')?.addEventListener('click', () => {
       router.navigate('flow-editor');
     });
 
+    // Editar Objetivo Diario con Modal Custom
     view.querySelector('#btn-edit-daily-goal')?.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const currentGoal = StorageService.getDailyGoal();
-      const input = await ModalService.prompt(
-        'Objetivo diario',
-        'Ingresa tu nuevo objetivo en minutos:',
-        currentGoal.toString(),
-        '🎯'
-      );
-        if (input !== null) {
-        const newGoal = parseInt(input, 10);
-        if (!isNaN(newGoal) && newGoal > 0) {
-          StorageService.setDailyGoal(newGoal);
-          router.navigate('home');
-        }
-      }
-    });
+  e.stopPropagation();
+  const currentGoal = StorageService.getDailyGoal();
+  const input = await ModalService.prompt(
+    'Objetivo diario',
+    'Ingresa tu objetivo en minutos (máx 1440m / 24h):',
+    currentGoal.toString(),
+    UI_ICONS.target
+  );
 
-    // Buscador
+  if (input !== null && input !== '') {
+    let newGoal = parseInt(input, 10);
+    if (!isNaN(newGoal)) {
+      newGoal = Math.max(1, Math.min(1440, newGoal)); // Tope entre 1 min y 24 horas
+      StorageService.setDailyGoal(newGoal);
+      router.navigate('home');
+    }
+  }
+});
+
     const searchInput = view.querySelector('#input-search-flows') as HTMLInputElement;
     searchInput?.addEventListener('input', (e) => {
       const q = (e.target as HTMLInputElement).value.toLowerCase().trim();
@@ -321,11 +315,9 @@ export class HomeView {
       });
     });
 
-    // Rutas
     view.querySelector('#btn-start-live')?.addEventListener('click', () => router.navigate('live-timer'));
     view.querySelector('#btn-create-flow')?.addEventListener('click', () => router.navigate('flow-editor'));
 
-    // Alternar Popover 3 puntos
     view.querySelectorAll('[data-menu-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -344,7 +336,6 @@ export class HomeView {
       view.querySelectorAll('.flow-menu-popover').forEach(pop => pop.classList.remove('active'));
     });
 
-    // Acciones de Flujo
     view.querySelectorAll('[data-play-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
@@ -365,7 +356,7 @@ export class HomeView {
         e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).getAttribute('data-delete-id');
         if (id) {
-          const confirmed = await ModalService.confirm('Eliminar flujo', '¿Deseas eliminar este flujo?', '🗑️');
+          const confirmed = await ModalService.confirm('Eliminar flujo', '¿Deseas eliminar este flujo?', UI_ICONS.alert);
           if (confirmed) {
             const flows = StorageService.getFlows().filter(f => f.id !== id);
             localStorage.setItem('focus_flow_flows', JSON.stringify(flows));

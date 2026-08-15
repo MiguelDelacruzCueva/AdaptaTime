@@ -1,8 +1,8 @@
-// src/views/FlowEditorView.ts
+// En src/views/FlowEditorView.ts
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
 import { Block, BlockType, Flow } from '../models/flow.model';
-import { BLOCK_ICONS_SVG } from '../utils/icons';
+import { BLOCK_ICONS_SVG, UI_ICONS } from '../utils/icons';
 import { ModalService } from '../services/modal.service';
 
 export class FlowEditorView {
@@ -34,7 +34,6 @@ export class FlowEditorView {
   }
 
   private static renderContent(view: HTMLElement, router: AppRouter) {
-    // 1. Guardar la posición de Scroll actual antes del re-renderizado
     const oldList = view.querySelector('.blocks-sequence-list');
     const listScrollTop = oldList ? oldList.scrollTop : 0;
 
@@ -57,20 +56,19 @@ export class FlowEditorView {
             class="flow-title-input" 
             placeholder="Nombre del flujo" 
             value="${this.flowName}" 
-            autocomplete="off"
+            autocomplete="off" 
           />
         </div>
 
         <div class="editor-actions-top">
           <span class="total-flow-duration">${totalMinutes}m total</span>
-          <button class="btn-gold-pill" id="btn-save-flow">
-            ✓ Guardar
+          <button class="btn-gold-pill" id="btn-save-flow" style="display:inline-flex; align-items:center; gap:5px;">
+            ${UI_ICONS.check} Guardar
           </button>
         </div>
       </header>
 
       <main class="editor-body">
-        <!-- Presets sidebar -->
         <aside class="block-selector-sidebar">
           <span class="sidebar-subtitle">TIPO DE BLOQUE</span>
 
@@ -107,7 +105,6 @@ export class FlowEditorView {
           </div>
         </aside>
 
-        <!-- Área de la Secuencia -->
         <section class="sequence-editor-area">
           <div class="timeline-bar-preview" title="Vista previa del flujo">
             ${this.blocks.map(b => `<div class="segment ${b.type.toLowerCase()}" style="flex: ${b.durationMinutes}"></div>`).join('')}
@@ -118,8 +115,8 @@ export class FlowEditorView {
               <div class="block-item-card ${b.type.toLowerCase()}" data-block-id="${b.id}">
                 <div class="block-left-info">
                   <div style="display:flex; flex-direction:column; gap:2px;">
-                    <button class="icon-btn btn-move-up" data-idx="${idx}" ${idx === 0 ? 'disabled style="opacity:0.2;"' : ''}>▲</button>
-                    <button class="icon-btn btn-move-down" data-idx="${idx}" ${idx === this.blocks.length - 1 ? 'disabled style="opacity:0.2;"' : ''}>▼</button>
+                    <button class="icon-btn btn-move-up" data-idx="${idx}" ${idx === 0 ? 'disabled style="opacity:0.2;"' : ''}>${UI_ICONS.chevronUp}</button>
+                    <button class="icon-btn btn-move-down" data-idx="${idx}" ${idx === this.blocks.length - 1 ? 'disabled style="opacity:0.2;"' : ''}>${UI_ICONS.chevronDown}</button>
                   </div>
                   <span class="block-index-number">${idx + 1}</span>
                   <span class="block-name-type">${BLOCK_ICONS_SVG[b.type]} ${b.type.charAt(0) + b.type.slice(1).toLowerCase()}</span>
@@ -131,7 +128,7 @@ export class FlowEditorView {
                     <span class="duration-value-text" data-id="${b.id}" title="Doble clic para editar minutos">${b.durationMinutes}m</span>
                     <button class="btn-adjust btn-plus" data-id="${b.id}">+</button>
                   </div>
-                  <button class="btn-delete-block" data-id="${b.id}" title="Eliminar bloque">🗑️</button>
+                  <button class="btn-delete-block" data-id="${b.id}" title="Eliminar bloque">${UI_ICONS.trash}</button>
                 </div>
               </div>
             `).join('')}
@@ -140,7 +137,6 @@ export class FlowEditorView {
       </main>
     `;
 
-    // 2. Restaurar la posición de Scroll exacta
     const newList = view.querySelector('.blocks-sequence-list');
     if (newList && listScrollTop) newList.scrollTop = listScrollTop;
 
@@ -158,14 +154,13 @@ export class FlowEditorView {
 
     view.querySelector('#btn-back-home')?.addEventListener('click', () => router.navigate('home'));
 
-    // Guardar Flujo
     view.querySelector('#btn-save-flow')?.addEventListener('click', async () => {
       if (!this.flowName.trim()) {
-        await ModalService.alert('Nombre requerido', 'Por favor ponle un nombre a tu flujo antes de guardar.', '⚠️');
+        await ModalService.alert('Nombre requerido', 'Por favor ponle un nombre a tu flujo antes de guardar.', UI_ICONS.alert);
         return;
       }
       if (this.blocks.length === 0) {
-        await ModalService.alert('Sin bloques', 'Agrega al menos un bloque a la secuencia.', '⚠️');
+        await ModalService.alert('Sin bloques', 'Agrega al menos un bloque a la secuencia.', UI_ICONS.alert);
         return;
       }
 
@@ -182,7 +177,6 @@ export class FlowEditorView {
       router.navigate('home');
     });
 
-    // Agregar Bloques desde Sidebar
     view.querySelectorAll('.block-preset-card').forEach(card => {
       card.addEventListener('click', () => {
         const type = card.getAttribute('data-type') as BlockType;
@@ -198,7 +192,6 @@ export class FlowEditorView {
       });
     });
 
-    // Ajustadores + / -
     view.querySelectorAll('.btn-minus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
@@ -210,18 +203,18 @@ export class FlowEditorView {
       });
     });
 
+    // Botón (+) con límite máximo de 60 minutos
     view.querySelectorAll('.btn-plus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
         const block = this.blocks.find(b => b.id === id);
-        if (block) {
+        if (block && block.durationMinutes < 60) {
           block.durationMinutes++;
           this.renderContent(view, router);
         }
       });
     });
 
-    // Editar minutos inline (doble clic) sin flechitas feas
     view.querySelectorAll('.duration-value-text').forEach(span => {
       span.addEventListener('dblclick', (e) => {
         const target = e.currentTarget as HTMLElement;
@@ -232,7 +225,8 @@ export class FlowEditorView {
         const input = document.createElement('input');
         input.type = 'number';
         input.min = '1';
-        input.max = '999';
+        input.max = '60';
+        input.maxLength = 2;
         input.value = block.durationMinutes.toString();
         input.className = 'duration-input-inline';
 
@@ -241,10 +235,10 @@ export class FlowEditorView {
         input.select();
 
         const saveValue = () => {
-          const val = parseInt(input.value);
-          if (!isNaN(val) && val > 0) {
-            block.durationMinutes = val;
-          }
+          let val = parseInt(input.value, 10);
+          if (isNaN(val) || val < 1) val = 1;
+          if (val > 60) val = 60; // Límite estricto de 60 minutos
+          block.durationMinutes = val;
           this.renderContent(view, router);
         };
 
@@ -255,7 +249,6 @@ export class FlowEditorView {
       });
     });
 
-    // Reordenar Bloques manteniendo la posición de scroll
     view.querySelectorAll('.btn-move-up').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const idx = parseInt((e.currentTarget as HTMLElement).getAttribute('data-idx') || '0');
@@ -282,7 +275,6 @@ export class FlowEditorView {
       });
     });
 
-    // Eliminar Bloque
     view.querySelectorAll('.btn-delete-block').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-id');

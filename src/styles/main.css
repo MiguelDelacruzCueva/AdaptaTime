@@ -1272,21 +1272,21 @@ html, body {
 /* --- FIX PARA MODAL PROMPT Y INPUT SIN FLECHAS --- */
 .modal-prompt-input::-webkit-outer-spin-button,
 .modal-prompt-input::-webkit-inner-spin-button {
-  -webkit-appearance: none !important;
-  margin: 0 !important;
+  -webkit-appearance: none ;
+  margin: 0 ;
 }
 
 .modal-prompt-input {
-  -moz-appearance: textfield !important;
-  appearance: textfield !important;
+  -moz-appearance: textfield ;
+  appearance: textfield ;
 }
 
 .custom-modal-overlay {
-  pointer-events: auto !important;
+  pointer-events: auto ;
 }
 
 .custom-modal-box {
-  pointer-events: auto !important;
+  pointer-events: auto ;
   position: relative;
   z-index: 10000;
 }
@@ -1295,3 +1295,23 @@ html, body {
   pointer-events: auto ;
   -webkit-user-select: none;
 }
+/* --- ALINEACIÓN Y COLOR DE ICONOS VECTORIALES --- */
+.svg-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.svg-icon.enfoque { color: var(--color-enfoque, #e5c158); }
+.svg-icon.descanso { color: var(--color-descanso, #60a5fa); }
+.svg-icon.movimiento { color: var(--color-movimiento, #4ade80); }
+.svg-icon.procrastinar { color: var(--color-procrastinar, #f87171); }
+
+.icon-btn svg {
+  display: block;
+}
+
+.meta-item.enfoque { color: var(--color-enfoque, #e5c158); }
+.meta-item.descanso { color: var(--color-descanso, #60a5fa); }
+.meta-item.movimiento { color: var(--color-movimiento, #4ade80); }
+.meta-item.procrastinar { color: var(--color-procrastinar, #f87171); }

@@ -5,6 +5,7 @@ import { Flow, Block } from '../models/flow.model';
 import { BLOCK_ICONS_SVG } from '../utils/icons';
 import { AudioService } from '../services/audio.service';
 import { TauriService } from '../services/tauri.service';
+import { formatTimerSeconds } from '../utils/format';
 
 
 export class ActiveTimerView {
@@ -198,8 +199,6 @@ export class ActiveTimerView {
   }
 
   private static formatTime(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return formatTimerSeconds(seconds);
   }
 }
