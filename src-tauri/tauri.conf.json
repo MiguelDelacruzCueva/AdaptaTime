@@ -16,8 +16,8 @@
         "title": "focus-flow",
         "width": 900,
         "height": 680,
-        "minWidth": 470,
-        "minHeight": 600,
+        "minWidth": 430,
+        "minHeight": 500,
         "resizable": true
       }
     ],

@@ -10,7 +10,7 @@ use tauri::{
 #[tauri::command]
 fn enter_mini_mode(window: tauri::WebviewWindow) {
     let _ = window.set_min_size(Some(tauri::LogicalSize::new(260.0, 160.0)));
-    let _ = window.set_size(tauri::LogicalSize::new(310.0, 185.0));
+    let _ = window.set_size(tauri::LogicalSize::new(300.0, 185.0));
     let _ = window.set_always_on_top(true);
     let _ = window.set_resizable(false);
 }
