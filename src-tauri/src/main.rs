@@ -7,15 +7,31 @@ use tauri::{
     Manager, WindowEvent,
 };
 
+#[tauri::command]
+fn enter_mini_mode(window: tauri::WebviewWindow) {
+    let _ = window.set_min_size(Some(tauri::LogicalSize::new(260.0, 160.0)));
+    let _ = window.set_size(tauri::LogicalSize::new(310.0, 185.0));
+    let _ = window.set_always_on_top(true);
+    let _ = window.set_resizable(false);
+}
+
+#[tauri::command]
+fn exit_mini_mode(window: tauri::WebviewWindow) {
+    let _ = window.set_always_on_top(false);
+    let _ = window.set_resizable(true);
+    let _ = window.set_min_size(Some(tauri::LogicalSize::new(480.0, 600.0)));
+    let _ = window.set_size(tauri::LogicalSize::new(980.0, 680.0));
+    let _ = window.center();
+}
+
 fn main() {
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![enter_mini_mode, exit_mini_mode])
         .setup(|app| {
-            // Opciones del menú de la bandeja
             let show_item = MenuItem::with_id(app, "show", "Mostrar Focus Flow", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 
-            // Construir el System Tray usando el icono de la ventana por defecto
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
@@ -49,11 +65,12 @@ fn main() {
 
             Ok(())
         })
-        // Interceptar el botón [X] para minimizar a la bandeja en lugar de cerrar
-        .on_window_event(|window, event| if let WindowEvent::CloseRequested { api, .. } = event {
-             
+        .on_window_event(|window, event| match event {
+            WindowEvent::CloseRequested { api, .. } => {
                 let _ = window.hide();
                 api.prevent_close();
+            }
+            _ => {}
         })
         .run(tauri::generate_context!())
         .expect("Error al iniciar la aplicación Tauri");
