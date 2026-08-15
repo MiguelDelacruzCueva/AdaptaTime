@@ -24,7 +24,7 @@ export class HomeView {
       .filter(h => h.completedAt.startsWith(todayStr))
       .reduce((acc, h) => acc + h.totalDurationMinutes, 0);
 
-    const goalMinutes = 30;
+    const goalMinutes = StorageService.getDailyGoal();
     const goalPercent = Math.min(100, Math.round((todayMinutes / goalMinutes) * 100));
 
     const userName = user ? user.name : 'Usuario';
@@ -133,6 +133,11 @@ export class HomeView {
           <div class="dashboard-card">
             <div class="card-header-row">
               <h3 class="card-header-title">Progreso diario</h3>
+              <button class="icon-btn" id="btn-edit-daily-goal" title="Modificar objetivo diario" style="font-size: 0.9rem; opacity: 0.7;">
+                <svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+              </button>
             </div>
 
             <div class="progress-ring-stage" style="position: relative; justify-content: center;">
@@ -286,6 +291,18 @@ export class HomeView {
     // --- EVENTO CREAR PRIMER FLUJO DESDE TARJETA VACÍA ---
     view.querySelector('#btn-empty-create-flow')?.addEventListener('click', () => {
       router.navigate('flow-editor');
+    });
+    
+    view.querySelector('#btn-edit-daily-goal')?.addEventListener('click', async () => {
+      const currentGoal = StorageService.getDailyGoal();
+      const input = prompt('Ingresa tu nuevo objetivo diario en minutos:', currentGoal.toString());
+      if (input !== null) {
+        const newGoal = parseInt(input.trim(), 10);
+        if (!isNaN(newGoal) && newGoal > 0) {
+          StorageService.setDailyGoal(newGoal);
+          router.navigate('home');
+        }
+      }
     });
 
     // Buscador

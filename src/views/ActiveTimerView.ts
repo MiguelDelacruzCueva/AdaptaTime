@@ -154,12 +154,22 @@ export class ActiveTimerView {
     } else {
       // Fin del flujo completo
       this.stopTimer();
+      type BlockType = /*unresolved*/ any;
+      const breakdown: Record<BlockType, number> = {
+        ENFOQUE: 0, DESCANSO: 0, MOVIMIENTO: 0, PROCRASTINAR: 0
+      };
+      let totalMinutes = 0;
+      this.flow.blocks.forEach(b => {
+        breakdown[b.type] += b.durationMinutes;
+        totalMinutes += b.durationMinutes;
+      });
       StorageService.recordSession({
         id: crypto.randomUUID(),
         flowId: this.flow.id,
         flowName: this.flow.name,
         completedAt: new Date().toISOString(),
-        totalDurationMinutes: this.flow.blocks.reduce((acc, b) => acc + b.durationMinutes, 0)
+        totalDurationMinutes: totalMinutes,
+        breakdown: breakdown
       });
       AudioService.playNotificationSound();
       TauriService.notifyBlockFinished('¡Flujo terminado!', `Has completado "${this.flow.name}". ¡Excelente trabajo!`);
