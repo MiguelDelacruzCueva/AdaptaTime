@@ -1,11 +1,12 @@
 // src/services/tauri.service.ts
 
 export class TauriService {
+  /**
+   * Envía notificación de fin de bloque
+   */
   static async notifyBlockFinished(title: string, body: string): Promise<void> {
     try {
-      // Intenta usar la API nativa de Tauri si está disponible
       const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-
       if (isTauri) {
         const { isPermissionGranted, requestPermission, sendNotification } = await import('@tauri-apps/plugin-notification');
         let permission = await isPermissionGranted();
@@ -19,20 +20,50 @@ export class TauriService {
         }
       }
     } catch {
-      // Silenciamos la advertencia del plugin y pasamos al fallback Web
+      // Fallback silencioso
     }
 
-    // Fallback con la API de Notificaciones estándar de HTML5
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'granted') {
         new Notification(title, { body });
       } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            new Notification(title, { body });
-          }
+        Notification.requestPermission().then((perm) => {
+          if (perm === 'granted') new Notification(title, { body });
         });
       }
+    }
+  }
+
+  /**
+   * Convierte la ventana en un Mini Widget flotante siempre visible
+   */
+  static async enterMiniMode(): Promise<void> {
+    try {
+      const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+      const win = getCurrentWindow();
+      await win.setMinSize(new LogicalSize(280, 160));
+      await win.setSize(new LogicalSize(310, 180));
+      await win.setAlwaysOnTop(true);
+      await win.setResizable(false);
+    } catch {
+      // Modo navegador dev
+    }
+  }
+
+  /**
+   * Restaura la ventana a su tamaño normal de trabajo
+   */
+  static async exitMiniMode(): Promise<void> {
+    try {
+      const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+      const win = getCurrentWindow();
+      await win.setAlwaysOnTop(false);
+      await win.setResizable(true);
+      await win.setMinSize(new LogicalSize(598, 600));
+      await win.setSize(new LogicalSize(980, 680));
+      await win.center();
+    } catch {
+      // Modo navegador dev
     }
   }
 }

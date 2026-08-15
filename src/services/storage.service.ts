@@ -12,6 +12,13 @@ export interface TaskItem {
   title: string;
   completed: boolean;
 }
+export interface HistoryItem {
+  id: string;
+  flowId?: string;
+  flowName: string;
+  completedAt: string;
+  totalDurationMinutes: number;
+}
 
 export class StorageService {
   // --- USUARIO ---
@@ -44,8 +51,8 @@ export class StorageService {
   }
 
   // --- HISTORIAL ---
-  static getHistory(): SessionHistory[] {
-    const data = localStorage.getItem(KEYS.HISTORY);
+  static getHistory(): HistoryItem[] {
+    const data = localStorage.getItem('focus_flow_history');
     return data ? JSON.parse(data) : [];
   }
 
@@ -86,5 +93,12 @@ export class StorageService {
     const tasks = this.getTasks().filter(t => t.id !== id);
     this.saveTasks(tasks);
     return tasks;
+  }
+  
+
+  static recordSession(session: HistoryItem): void {
+    const history = this.getHistory();
+    history.unshift(session);
+    localStorage.setItem('focus_flow_history', JSON.stringify(history));
   }
 }
