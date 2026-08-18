@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <strong>Tu tiempo, tu ritmo.</strong><br>
-  Una aplicación de escritorio minimalista y ultra-ligera para la gestión de flujos de trabajo, productividad consciente y pausas activas.
+  <strong>Gestión modular de tiempo y secuencias de enfoque de alto rendimiento.</strong><br>
+  Software de escritorio nativo, ligero y enfocado en la ejecución continua sin fricción ni recolección de datos.
 </p>
 
 <p align="center">
@@ -12,63 +12,59 @@
   <img src="https://img.shields.io/badge/Rust-Backend-orange?style=flat-square&logo=rust&logoColor=white" alt="Rust">
   <img src="https://img.shields.io/badge/TypeScript-Frontend-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Platform-Windows%20x64-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows">
-  <img src="https://img.shields.io/badge/Size-%3C%202%20MB-brightgreen?style=flat-square" alt="Size">
+  <img src="https://img.shields.io/badge/Binary%20Size-%3C%202%20MB-brightgreen?style=flat-square" alt="Size">
 </p>
 
 ---
 
-## 📖 Acerca de Focus Flow
+## Descripción General
 
-**Focus Flow** es una herramienta de productividad diseñada para eliminar distracciones y estructurar sesiones de trabajo sin fricción. A diferencia de las herramientas convencionales basadas en pomodoros rígidos, Focus Flow permite diseñar **secuencias personalizadas de bloques dinámicos** combinando cuatro fases esenciales:
+**Focus Flow** es una aplicación de escritorio diseñada para estructurar sesiones de trabajo complejas mediante cadenas secuenciales de tiempo. Su propósito es optimizar la concentración reduciendo la carga cognitiva necesaria para planificar periodos de trabajo, pausas estratégicas y tiempos de recuperación.
 
-- ⚡ **Enfoque:** Bloques de concentración profunda.
-- ☕ **Descanso:** Pausas breves para recargar energía.
-- 🌿 **Movimiento:** Estiramientos o actividad física ligera.
-- 🎮 **Procrastinación Consciente:** Espacios delimitados para desconexión controlada.
+Desarrollada sobre **Tauri v2** y **Rust**, la aplicación ofrece un consumo mínimo de memoria RAM, un ejecutable inferior a 2 MB y ejecución local sin dependencias de servicios externos.
 
 ---
 
-## ✨ Características Principales
+## Módulos y Capacidades Técnicas
 
-### 1. 🗂️ Constructor de Flujos Personalizados
-- Diseña secuencias a tu medida con duración de **1 a 60 minutos** por bloque.
-- Reordena bloques fluidamente con controles de elevación e inserción directa.
-- Vista previa inteligente con muestreo proporcional de barras de color.
-- Edición de minutos en tiempo real mediante *inline editing*.
+### 1. Motor de Secuencias Personalizadas
+* **Estructuración por fases:** Permite componer rutinas integrando cuatro estados parametrizables: Enfoque, Descanso, Movimiento y Procrastinación deliberada.
+* **Control de granularidad:** Definición de bloques con duraciones estrictas entre 1 y 60 minutos.
+* **Muestreo visual inteligente:** La interfaz procesa secuencias extensas manteniendo una representación visual limpia mediante un algoritmo de muestreo proporcional de máximo 10 indicadores de estado.
+* **Reorganización en caliente:** Capacidad de reordenar y editar la duración de los bloques directamente en la interfaz.
 
-### 2. 🪟 Mini-Widget Flotante (*Picture-in-Picture*)
-- Al iniciar una sesión, la aplicación se transforma automáticamente en un **widget compacto de escritorio ($300 \times 170\text{ px}$)**.
-- **Always on Top nativo:** Se mantiene fija en una esquina de tu pantalla por encima de navegadores, editores de código o cualquier ventana activa.
-- Cabecera con soporte de arrastre (*drag region*) para posicionarlo donde prefieras.
-- Color temático reactivo según el tipo de bloque activo y vista previa del bloque siguiente.
-- Al completar la sesión o cerrar el widget, la ventana regresa fluidamente a su tamaño estándar.
+### 2. Modo Flotante Always-on-Top (Mini Widget)
+* **Transición de ventana nativa:** Al inicializar un flujo, la aplicación reduce su dimensión a 300 × 170 px mediante comandos directos en Rust.
+* **Prioridad en el gestor de ventanas:** Se ancla por encima de navegadores y entornos de desarrollo sin interrumpir el flujo visual de trabajo.
+* **Visualización esencial:** Presenta únicamente el tiempo restante, la fase activa, el bloque subsiguiente y los controles de ciclo (pausa, reinicio, avance forzado).
+* **Restauración automática:** Al finalizar el ciclo o cancelar la sesión, la ventana recupera sus dimensiones operativas estándar de manera fluida.
 
-### 3. ⏱️ Cronómetro Libre (*Live Timer*)
-- Modalidad libre para trabajar sin una estructura preestablecida.
-- Alterna entre Enfoque, Descanso, Movimiento y Procrastinar con un solo clic.
-- Barra de porcentaje proporcional acumulativa y registro directo en las estadísticas diarias.
+### 3. Cronómetro Libre y Registro en Tiempo Real
+* Diseñado para sesiones de trabajo sin planificación previa.
+* Permite alternar instantáneamente entre estados de actividad calculando en tiempo real el tiempo invertido en cada categoría.
+* Gráfico de distribución de porcentaje en vivo para monitorear el balance de la sesión.
 
-### 4. 📅 Calendario & Reportes de Productividad
-- Matriz mensual de seguimiento cronológico a partir de la fecha de inicio de uso.
-- Indicador de cumplimiento de meta diaria (ajustable de 1 a 1440 minutos / 24h).
-- Gráfico de barras segmentado con el desglose exacto de minutos y sesiones registradas.
+### 4. Métricas de Rendimiento y Calendario Histórico
+* **Monitoreo de objetivos diarios:** Configuración de metas diarias de productividad (de 1 a 1440 minutos / 24 h).
+* **Cálculo de efectividad:** Métrica porcentual que evalúa el cumplimiento frente a la meta diaria establecida.
+* **Gráficos de distribución:** Desglose del tiempo invertido por día mediante barras de proporción exacta.
+* **Bloqueo temporal lógico:** El calendario delimita el historial a partir de la fecha de instalación, garantizando consistencia en los datos.
 
-### 5. 🔔 Notificaciones y Audio Sintetizado
-- Tonos suaves generados mediante la **Web Audio API** (sin archivos de audio pesados en memoria).
-- Notificaciones de escritorio nativas del sistema operativo al culminar cada bloque.
-- Integración en la bandeja del sistema (*System Tray*) para segundo plano.
+### 5. Arquitectura de Privacidad y Rendimiento
+* **Almacenamiento Local (Local-First):** Toda la persistencia opera de forma síncrona en el equipo del usuario. No se transmiten métricas, telemetría ni credenciales a servidores remotos.
+* **Síntesis de Audio Web:** Alertas sonoras generadas en tiempo real mediante la Web Audio API, eliminando la sobrecarga de dependencias y archivos de audio pesados.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Especificaciones del Stack
 
-| Capa | Tecnología | Propósito |
+| Componente | Tecnología | Rol en el Sistema |
 | :--- | :--- | :--- |
-| **Core / Runtime** | [Tauri v2](https://tauri.app/) + [Rust](https://www.rust-lang.org/) | Gestión de ventana nativa, redimensionado, tray y alto rendimiento |
-| **Frontend** | [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) | Lógica reactiva modular sin sobrecarga de frameworks |
-| **Diseño / UI** | CSS3 Moderno (Container Queries, Flexbox, Grid) | Interfaz responsiva inspirada en tipografía editorial clásica y tema oscuro |
-| **Audio** | Web Audio API | Síntesis armónica de tonos de notificación en tiempo real |
-| **Persistencia** | Storage Engine (LocalStorage) | Almacenamiento local privado y sin recopilación de datos externos |
+| **Backend / Núcleo** | Rust + Tauri v2 | Control de ventana nativo, tray del sistema y empaquetado optimizado |
+| **Frontend** | TypeScript | Lógica de estado, temporización y renderizado modular |
+| **Herramienta de Build**| Vite | Empaquetado y compilación del entorno web |
+| **Estilos** | CSS3 (Container Queries) | Renderizado responsivo adaptativo al ancho de contenedores |
+| **Persistencia** | Storage Engine Local | Manejo de estructuras de datos e historial de sesiones |
 
 ---
 
