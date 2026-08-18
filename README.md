@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/logo.svg" alt="Focus Flow Logo" width="540">
+  <img src="./src/assets/logo.svg" alt="Focus Flow Logo" width="540">
 </p>
 
 <p align="center">

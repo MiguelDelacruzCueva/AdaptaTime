@@ -196,11 +196,19 @@ export class LiveTimerView {
       const totalMinutes = Math.max(1, Math.round(totalSeconds / 60));
       this.stopTimer();
 
+      // Desglose de minutos redondeados por acción
+      const breakdown: Record<BlockType, number> = {
+        ENFOQUE: Math.round(this.timeSpent.ENFOQUE / 60),
+        DESCANSO: Math.round(this.timeSpent.DESCANSO / 60),
+        MOVIMIENTO: Math.round(this.timeSpent.MOVIMIENTO / 60),
+        PROCRASTINAR: Math.round(this.timeSpent.PROCRASTINAR / 60)
+      };
       StorageService.recordSession({
         id: crypto.randomUUID(),
         flowName: `Sesión libre (${this.currentAction ? this.currentAction.charAt(0) + this.currentAction.slice(1).toLowerCase() : 'Enfoque'})`,
         completedAt: new Date().toISOString(),
         totalDurationMinutes: totalMinutes,
+        breakdown: breakdown // 👈 Guarda el desglose completo
       });
 
       AudioService.playNotificationSound();
