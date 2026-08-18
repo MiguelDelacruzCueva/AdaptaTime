@@ -44,7 +44,7 @@ export class HistoryView {
                 </div>
                 <div class="history-right-meta">
                   <span class="duration-badge">${session.totalDurationMinutes}m</span>
-                  <span class="blocks-badge">${session.completedBlocks}/${session.totalBlocks} bloques</span>
+                  <span class="blocks-badge">${session.completedBlocks ?? 1}/${session.totalBlocks ?? 1} bloques </span>
                   <button class="play-btn mini-play" data-replay-id="${session.flowId}">▶</button>
                 </div>
               </div>

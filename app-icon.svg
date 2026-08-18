@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Fondo redondeado con acabado nativo -->
+  <rect width="512" height="512" rx="110" fill="#0f0f13"/>
+
+  <g transform="translate(256, 256) scale(2.8) translate(-80, -80)">
+    <!-- Borde exterior oscuro -->
+    <circle cx="80" cy="80" r="70" fill="#141418" stroke="#1c1c22" stroke-width="4"/>
+
+    <!-- 1. Enfoque (Dorado) -->
+    <path d="M 80 15 A 65 65 0 0 1 133.24 117.28 L 108.67 100.08 A 35 35 0 0 0 80 45 Z" fill="#9b7e47"/>
+
+    <!-- 2. Descanso (Azul) -->
+    <path d="M 133.24 117.28 A 65 65 0 0 1 42.72 133.24 L 59.92 108.67 A 35 35 0 0 0 108.67 100.08 Z" fill="#406371"/>
+
+    <!-- 3. Movimiento (Verde) -->
+    <path d="M 42.72 133.24 A 65 65 0 0 1 17.21 63.18 L 46.19 70.94 A 35 35 0 0 0 59.92 108.67 Z" fill="#4a7051"/>
+
+    <!-- 4. Procrastinar (Rojo) -->
+    <path d="M 17.21 63.18 A 65 65 0 0 1 80 15 L 80 45 A 35 35 0 0 0 46.19 70.94 Z" fill="#7d4b4e"/>
+
+    <!-- Separadores oscuros -->
+    <g stroke="#0f0f13" stroke-width="3.5" stroke-linecap="round">
+      <line x1="80" y1="15" x2="80" y2="45"/>
+      <line x1="133.24" y1="117.28" x2="108.67" y2="100.08"/>
+      <line x1="42.72" y1="133.24" x2="59.92" y2="108.67"/>
+      <line x1="17.21" y1="63.18" x2="46.19" y2="70.94"/>
+    </g>
+
+    <!-- Núcleo central -->
+    <circle cx="80" cy="80" r="35" fill="#0f0f13"/>
+
+    <!-- Manecilla Dorada -->
+    <path d="M 77.5 80 L 79.2 24 A 1 1 0 0 1 81.5 24 L 82.5 80 Z" fill="#bfa05d"/>
+    <circle cx="80" cy="80" r="6" fill="#bfa05d"/>
+    <circle cx="80" cy="80" r="2.5" fill="#0f0f13"/>
+  </g>
+</svg>

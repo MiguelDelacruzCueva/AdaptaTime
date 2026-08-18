@@ -19,6 +19,8 @@ export interface HistoryItem {
   flowName: string;
   completedAt: string;
   totalDurationMinutes: number;
+  completedBlocks?: number;  
+  totalBlocks?: number;
   breakdown?: Record<BlockType, number>;
 }
 
