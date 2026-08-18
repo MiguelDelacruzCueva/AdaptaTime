@@ -32,7 +32,7 @@ Desarrollada sobre **Tauri v2** y **Rust**, la aplicación ofrece un consumo mí
 * **Control de granularidad:** Definición de bloques con duraciones estrictas entre 1 y 60 minutos.
 * **Muestreo visual inteligente:** La interfaz procesa secuencias extensas manteniendo una representación visual limpia mediante un algoritmo de muestreo proporcional de máximo 10 indicadores de estado.
 * **Reorganización en caliente:** Capacidad de reordenar y editar la duración de los bloques directamente en la interfaz.
-<img width="1004" height="805" alt="image" src="https://github.com/user-attachments/assets/e4f9d293-981e-4bac-993c-a2386476a726" />
+<img width="800" height="605" alt="image" src="https://github.com/user-attachments/assets/e4f9d293-981e-4bac-993c-a2386476a726" />
 
 
 ### 2. Modo Flotante Always-on-Top (Mini Widget)
@@ -45,12 +45,15 @@ Desarrollada sobre **Tauri v2** y **Rust**, la aplicación ofrece un consumo mí
 * Diseñado para sesiones de trabajo sin planificación previa.
 * Permite alternar instantáneamente entre estados de actividad calculando en tiempo real el tiempo invertido en cada categoría.
 * Gráfico de distribución de porcentaje en vivo para monitorear el balance de la sesión.
+<img width="889" height="657" alt="image" src="https://github.com/user-attachments/assets/0ad2a1d5-fec7-40d7-84b2-54ce55c97b22" />
+
 
 ### 4. Métricas de Rendimiento y Calendario Histórico
 * **Monitoreo de objetivos diarios:** Configuración de metas diarias de productividad (de 1 a 1440 minutos / 24 h).
 * **Cálculo de efectividad:** Métrica porcentual que evalúa el cumplimiento frente a la meta diaria establecida.
 * **Gráficos de distribución:** Desglose del tiempo invertido por día mediante barras de proporción exacta.
 * **Bloqueo temporal lógico:** El calendario delimita el historial a partir de la fecha de instalación, garantizando consistencia en los datos.
+<img width="1328" height="685" alt="image" src="https://github.com/user-attachments/assets/061f8663-85ff-4bab-9d41-615d1ace5f25" />
 
 ### 5. Arquitectura de Privacidad y Rendimiento
 * **Almacenamiento Local (Local-First):** Toda la persistencia opera de forma síncrona en el equipo del usuario. No se transmiten métricas, telemetría ni credenciales a servidores remotos.
