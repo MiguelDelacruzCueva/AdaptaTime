@@ -32,6 +32,8 @@ Desarrollada sobre **Tauri v2** y **Rust**, la aplicación ofrece un consumo mí
 * **Control de granularidad:** Definición de bloques con duraciones estrictas entre 1 y 60 minutos.
 * **Muestreo visual inteligente:** La interfaz procesa secuencias extensas manteniendo una representación visual limpia mediante un algoritmo de muestreo proporcional de máximo 10 indicadores de estado.
 * **Reorganización en caliente:** Capacidad de reordenar y editar la duración de los bloques directamente en la interfaz.
+<img width="1004" height="805" alt="image" src="https://github.com/user-attachments/assets/e4f9d293-981e-4bac-993c-a2386476a726" />
+
 
 ### 2. Modo Flotante Always-on-Top (Mini Widget)
 * **Transición de ventana nativa:** Al inicializar un flujo, la aplicación reduce su dimensión a 300 × 170 px mediante comandos directos en Rust.
