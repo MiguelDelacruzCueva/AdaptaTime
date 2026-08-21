@@ -82,20 +82,45 @@ export class ModalService {
     });
   }
 
-  static prompt(title: string, message: string, defaultValue = '', icon = '🎯'): Promise<string | null> {
+  /**
+   * Modal de Entrada con soporte dinámico para Texto y Números
+   */
+  static prompt(
+    title: string,
+    message: string,
+    defaultValue = '',
+    icon = '🎯',
+    inputType: 'text' | 'number' = 'text',
+    maxLength = 20,
+    min = 1,
+    max = 1440
+  ): Promise<string | null> {
     return new Promise((resolve) => {
-      // Eliminar cualquier modal previo que haya quedado en memoria
-      document.querySelectorAll('.custom-modal-overlay').forEach(el => el.remove());
+      document.querySelectorAll('.custom-modal-overlay').forEach((el) => el.remove());
 
       const overlay = document.createElement('div');
       overlay.className = 'custom-modal-overlay';
+
+      const inputAttributes =
+        inputType === 'number'
+          ? `type="number" min="${min}" max="${max}"`
+          : `type="text" maxlength="${maxLength}"`;
+
       overlay.innerHTML = `
         <div class="custom-modal-box">
           <div class="modal-icon-header">${icon}</div>
           <h3 class="modal-title">${title}</h3>
           <p class="modal-message">${message}</p>
           <div class="modal-input-field-wrap">
-            <input type="number" id="modal-prompt-input" class="modal-prompt-input" value="${defaultValue}" min="1" max="999" autocomplete="off" />
+            <input 
+              ${inputAttributes}
+              id="modal-prompt-input" 
+              class="modal-prompt-input" 
+              value="${defaultValue}" 
+              placeholder="${inputType === 'text' ? 'Máximo 20 letras...' : 'Minutos...'}"
+              autocomplete="off" 
+              spellcheck="false"
+            />
           </div>
           <div class="modal-actions-row">
             <button type="button" class="modal-btn modal-btn-cancel" id="btn-modal-cancel">Cancelar</button>

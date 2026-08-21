@@ -35,29 +35,6 @@ export class HomeView {
       <div class="dashboard-grid">
         <!-- COLUMNA IZQUIERDA -->
         <div class="main-column" style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0;">
-          
-          <!-- SALUDO CON EDICIÓN -->
-          <div class="greeting-header-section">
-            <span class="greeting-subtitle-label">${greetingText}</span>
-            
-            ${!this.isEditingName ? `
-              <div class="greeting-name-row">
-                <h2 class="greeting-user-name">${userName}</h2>
-                <button class="icon-btn" id="btn-edit-name" title="Editar nombre" style="opacity: 0.7;">${UI_ICONS.edit}</button>
-              </div>
-            ` : `
-              <div class="inline-name-edit-container">
-                <div class="inline-name-input-row">
-                  <input type="text" id="input-edit-username" class="inline-name-input" value="${userName}" maxlength="20" placeholder="Tu nombre..." autocomplete="off" />
-                  <button class="icon-btn" id="btn-save-name" title="Guardar" style="color: var(--color-enfoque, #e5c158);">${UI_ICONS.check}</button>
-                  <button class="icon-btn" id="btn-cancel-name" title="Cancelar">${UI_ICONS.close}</button>
-                </div>
-                <button class="link-back-welcome" id="btn-back-onboarding">
-                  ← Volver a la bienvenida
-                </button>
-              </div>
-            `}
-          </div>
 
           <!-- MÓDULO MIS FLUJOS -->
           <div class="dashboard-card" style="min-width: 0;">
@@ -313,6 +290,23 @@ export class HomeView {
         const title = card.querySelector('.flow-title')?.textContent?.toLowerCase() || '';
         (card as HTMLElement).style.display = title.includes(q) ? 'flex' : 'none';
       });
+    });
+  document.querySelector('#btn-sidebar-edit-name')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const currentUser = StorageService.getUser();
+      const currentName = currentUser ? currentUser.name : '';
+      
+      const newName = await ModalService.prompt(
+        'Editar perfil',
+        'Ingresa tu nuevo nombre de usuario:',
+        currentName,
+        UI_ICONS.edit
+      );
+
+      if (newName !== null && newName.trim() !== '') {
+        StorageService.saveUser(newName.trim().slice(0, 20));
+        router.navigate('home');
+      }
     });
 
     view.querySelector('#btn-start-live')?.addEventListener('click', () => router.navigate('live-timer'));
