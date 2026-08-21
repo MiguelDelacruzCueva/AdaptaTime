@@ -8,9 +8,35 @@ use tauri::{
 };
 
 #[tauri::command]
+fn start_window_drag(window: tauri::WebviewWindow) {
+    let _ = window.start_dragging();
+}
+
+#[tauri::command]
+fn minimize_window(window: tauri::WebviewWindow) {
+    let _ = window.minimize();
+}
+
+#[tauri::command]
+fn toggle_maximize(window: tauri::WebviewWindow) {
+    if let Ok(is_max) = window.is_maximized() {
+        if is_max {
+            let _ = window.unmaximize();
+        } else {
+            let _ = window.maximize();
+        }
+    }
+}
+
+#[tauri::command]
+fn close_app(window: tauri::WebviewWindow) {
+    let _ = window.close();
+}
+
+#[tauri::command]
 fn enter_mini_mode(window: tauri::WebviewWindow) {
-    let _ = window.set_min_size(Some(tauri::LogicalSize::new(260.0, 160.0)));
-    let _ = window.set_size(tauri::LogicalSize::new(300.0, 185.0));
+    let _ = window.set_min_size(Some(tauri::LogicalSize::new(260.0, 150.0)));
+    let _ = window.set_size(tauri::LogicalSize::new(300.0, 170.0));
     let _ = window.set_always_on_top(true);
     let _ = window.set_resizable(false);
 }
@@ -26,7 +52,14 @@ fn exit_mini_mode(window: tauri::WebviewWindow) {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![enter_mini_mode, exit_mini_mode])
+        .invoke_handler(tauri::generate_handler![
+            minimize_window,
+            toggle_maximize,
+            close_app,
+            enter_mini_mode,
+            exit_mini_mode,
+            start_window_drag
+        ])
         .setup(|app| {
             let show_item = MenuItem::with_id(app, "show", "Mostrar Focus Flow", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;
