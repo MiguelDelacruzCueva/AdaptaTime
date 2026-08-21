@@ -1975,3 +1975,32 @@ html, body {
   filter: brightness(1.1);
   transform: scale(1.05);
 }
+/* --- ESTADO DESHABILITADO EN NAVEGACIÓN --- */
+.nav-item.nav-disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  pointer-events: auto;
+}
+
+.nav-item.nav-disabled:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+.nav-lock-badge {
+  font-size: 0.7rem;
+  margin-left: auto;
+  opacity: 0.7;
+}
+
+/* Animación sutil de atención en el widget de esquina */
+.corner-flow-widget.corner-shake {
+  animation: cornerAttention 0.4s ease;
+}
+
+@keyframes cornerAttention {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
+}

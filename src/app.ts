@@ -33,6 +33,7 @@ export class AppRouter {
   }
 
   navigate(route: Route, params: Record<string, unknown> = {}): void {
+    document.querySelectorAll('.custom-modal-overlay').forEach(el => el.remove());
     this.currentRoute = route;
     this.currentParams = params;
     this.renderLayout(params);
@@ -58,12 +59,13 @@ export class AppRouter {
 
     const userName = user ? user.name : 'Usuario';
     const greeting = this.getGreetingByTime();
+    const isBusy = FlowRunnerService.isBusy();
 
     const layout = document.createElement('div');
     layout.className = 'app-root-shell';
 
     layout.innerHTML = `
-      <!-- BARRA DE TÍTULO ULTRA-DELGADA -->
+      <!-- BARRA SUPERIOR -->
       <header class="system-titlebar" data-tauri-drag-region="true">
         <div class="titlebar-left" data-tauri-drag-region="true">
           <button class="titlebar-burger-btn" id="btn-toggle-sidebar" title="Menú lateral">
@@ -120,9 +122,16 @@ export class AppRouter {
               <button class="nav-item ${this.currentRoute === 'flow-editor' ? 'active' : ''}" data-route="flow-editor">
                 <span>-</span> Nuevo flujo
               </button>
-              <button class="nav-item ${this.currentRoute === 'live-timer' ? 'active' : ''}" data-route="live-timer">
-                <span>-</span> Cronómetro
+              
+              <!-- Botón Cronómetro con clase condicional si hay flujo en ejecución -->
+              <button 
+                class="nav-item ${this.currentRoute === 'live-timer' ? 'active' : ''} ${isBusy ? 'nav-disabled' : ''}" 
+                data-route="live-timer"
+                title="${isBusy ? 'Bloqueado: hay una secuencia en marcha' : ''}"
+              >
+                <span>-</span> Cronómetro ${isBusy ? '<span class="nav-lock-badge">🔒</span>' : ''}
               </button>
+
               <button class="nav-item ${this.currentRoute === 'calendar' ? 'active' : ''}" data-route="calendar">
                 <span>-</span> Calendario
               </button>
@@ -142,28 +151,20 @@ export class AppRouter {
 
         <main class="main-viewport" id="route-container"></main>
 
-        <!-- WIDGET FLOTANTE DE ESQUINA EN VISTA GRANDE -->
+        <!-- WIDGET DE ESQUINA -->
         <div id="corner-running-widget" class="corner-flow-widget" style="display: none;"></div>
       </div>
     `;
 
     const routeContainer = layout.querySelector('#route-container') as HTMLElement;
-    
-    // Inserción segura de la vista
-    try {
-      const viewElement = this.getViewElement(this.currentRoute, params);
-      routeContainer.appendChild(viewElement);
-    } catch (err) {
-      console.error(`Error al renderizar la vista ${this.currentRoute}:`, err);
-      routeContainer.innerHTML = `<div style="padding: 2rem; color: #f87171;">Error al cargar la vista. Revisa la consola.</div>`;
-    }
+    routeContainer.appendChild(this.getViewElement(this.currentRoute, params));
 
     this.bindEvents(layout);
     this.appElement.appendChild(layout);
   }
 
   private bindEvents(layout: HTMLElement): void {
-    // 1. Controles de Ventana y Arrastre
+    // 1. Controles de Ventana
     layout.querySelector('#sys-win-min')?.addEventListener('click', () => TauriService.minimize());
     layout.querySelector('#sys-win-max')?.addEventListener('click', () => TauriService.toggleMaximize());
     layout.querySelector('#sys-win-close')?.addEventListener('click', () => TauriService.close());
@@ -179,7 +180,7 @@ export class AppRouter {
       TauriService.toggleMaximize();
     });
 
-    // 2. Control de Menú Lateral
+    // 2. Control de Sidebar
     const sidebar = layout.querySelector('#app-sidebar') as HTMLElement;
     const backdrop = layout.querySelector('#sidebar-backdrop') as HTMLElement;
     const toggleBtn = layout.querySelector('#btn-toggle-sidebar');
@@ -196,14 +197,18 @@ export class AppRouter {
     toggleBtn?.addEventListener('click', toggleSidebar);
     backdrop?.addEventListener('click', toggleSidebar);
 
-    // 3. Navegación con Bloqueo si hay flujo en curso
+    // 3. Navegación fluida (Sin modales invasivos)
+    const cornerWidget = layout.querySelector('#corner-running-widget') as HTMLElement;
+
     layout.querySelectorAll('.nav-item').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', (e) => {
         const route = (e.currentTarget as HTMLElement).getAttribute('data-route') as Route;
+
+        // Si intenta entrar a cronómetro mientras hay flujo activo, simplemente no navega
         if (route === 'live-timer' && FlowRunnerService.isBusy()) {
-          await ModalService.alert('Flujo en curso', 'Tienes un flujo de bloques activo. Termínalo antes de usar el cronómetro libre.', UI_ICONS.alert);
           return;
         }
+
         sidebar.classList.remove('open');
         backdrop.classList.remove('active');
         if (route) this.navigate(route);
@@ -231,8 +236,7 @@ export class AppRouter {
       }
     });
 
-    // 5. Suscripción del Widget Flotante de Esquina
-    const cornerWidget = layout.querySelector('#corner-running-widget') as HTMLElement;
+    // 5. Suscripción del Widget de Esquina
     FlowRunnerService.subscribe(() => {
       const status = FlowRunnerService.getStatus();
       if (!status || this.currentRoute === 'active-timer') {

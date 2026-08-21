@@ -333,8 +333,11 @@ export class HomeView {
 
     view.querySelectorAll('[data-play-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
-        router.navigate('active-timer', { flowId: id });
+        if (id) {
+          router.navigate('active-timer', { flowId: id });
+        }
       });
     });
     const btnLive = view.querySelector('#btn-start-live') as HTMLButtonElement;
@@ -352,20 +355,14 @@ export class HomeView {
       });
     }
 
+    // Iniciar flujo directamente al hacer clic en Play
     view.querySelectorAll('[data-play-id]').forEach(btn => {
-      const el = btn as HTMLElement;
-      if (isBusy) {
-        el.style.opacity = '0.35';
-        el.style.cursor = 'not-allowed';
-      }
-      el.addEventListener('click', async (e) => {
-        if (FlowRunnerService.isBusy()) {
-          e.stopPropagation();
-          await ModalService.alert('Flujo activo', 'Ya tienes una secuencia en ejecución. Revisa la esquina inferior derecha.', UI_ICONS.alert);
-          return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
+        if (id) {
+          router.navigate('active-timer', { flowId: id });
         }
-        const id = el.getAttribute('data-play-id');
-        router.navigate('active-timer', { flowId: id });
       });
     });
 

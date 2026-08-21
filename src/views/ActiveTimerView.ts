@@ -5,19 +5,22 @@ import { FlowRunnerService } from '../services/flow-runner.service';
 import { TauriService } from '../services/tauri.service';
 import { BLOCK_ICONS_SVG, UI_ICONS } from '../utils/icons';
 import { formatTimerSeconds } from '../utils/format';
-import { ModalService } from '../services/modal.service';
 
 export class ActiveTimerView {
   private static unsubscribe: (() => void) | null = null;
 
   static render(router: AppRouter, params: Record<string, unknown> = {}): HTMLElement {
+    document.querySelectorAll('.custom-modal-overlay').forEach(el => el.remove());
     const view = document.createElement('div');
     view.className = 'active-timer-pip-wrapper';
 
-    // Iniciar flujo si se pasa un nuevo flowId
-    if (params.flowId) {
-      const flow = StorageService.getFlows().find(f => f.id === params.flowId);
-      if (flow) FlowRunnerService.startFlow(flow);
+    // Si se pasa un flowId nuevo o diferente al actual, se inicia; si ya está corriendo, se mantiene intacto
+   if (params.flowId) {
+      const status = FlowRunnerService.getStatus();
+      if (!status || status.flow.id !== params.flowId) {
+        const flow = StorageService.getFlows().find(f => f.id === params.flowId);
+        if (flow) FlowRunnerService.startFlow(flow);
+      }
     }
 
     TauriService.enterMiniMode();
@@ -36,7 +39,6 @@ export class ActiveTimerView {
 
       view.innerHTML = `
         <div class="pip-card ${type.toLowerCase()}">
-          <!-- CABECERA DE ARRASTRE -->
           <div class="pip-topbar">
             <div class="pip-phase-tag ${type.toLowerCase()}">
               ${BLOCK_ICONS_SVG[type]}
@@ -45,8 +47,7 @@ export class ActiveTimerView {
             </div>
 
             <div class="pip-top-actions">
-              <!-- Volver a pantalla grande -->
-              <button class="pip-icon-btn" id="btn-return-big" title="Expandir a vista principal">
+              <button class="pip-icon-btn" id="btn-return-big" title="Volver a pantalla grande (sigue en marcha)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="15 3 21 3 21 9"></polyline>
                   <polyline points="9 21 3 21 3 15"></polyline>
@@ -54,14 +55,12 @@ export class ActiveTimerView {
                   <line x1="3" y1="21" x2="10" y2="14"></line>
                 </svg>
               </button>
-              <!-- Cerrar / Cancelar sesión -->
-              <button class="pip-icon-btn close" id="btn-close-session" title="Terminar sesión">
+              <button class="pip-icon-btn close" id="btn-close-session" title="Terminar flujo">
                 ${UI_ICONS.close}
               </button>
             </div>
           </div>
 
-          <!-- NÚCLEO: TIEMPO Y TÍTULO -->
           <div class="pip-main-body">
             <span class="pip-flow-name" title="${flowName}">${flowName}</span>
             <div class="pip-digits ${type.toLowerCase()}">
@@ -75,7 +74,6 @@ export class ActiveTimerView {
             </div>
           </div>
 
-          <!-- CONTROLES INFERIORES -->
           <div class="pip-controls-row">
             <button class="pip-ctrl-btn" id="btn-reset-block" title="Reiniciar bloque">
               ${UI_ICONS.reset}
@@ -90,7 +88,7 @@ export class ActiveTimerView {
         </div>
       `;
 
-      // Eventos
+      // Eventos de control
       view.querySelector('#btn-toggle-play')?.addEventListener('click', (e) => {
         e.stopPropagation();
         isRunning ? FlowRunnerService.pause() : FlowRunnerService.resume();
@@ -106,26 +104,26 @@ export class ActiveTimerView {
         FlowRunnerService.nextBlock();
       });
 
-      view.querySelector('#btn-return-big')?.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        this.destroy();
-        await TauriService.exitMiniMode();
-        router.navigate('home');
-      });
+      // Retorno fluido a la vista grande
+      // Botón de retorno (vuelve a la app grande manteniendo el flujo)
+    view.querySelector('#btn-return-big')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      this.destroy();
+      await TauriService.exitMiniMode();
+      router.navigate('home');
+    });
 
-      view.querySelector('#btn-close-session')?.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const ok = await ModalService.confirm('¿Terminar sesión?', 'Se cancelará el flujo en curso.', UI_ICONS.alert);
-        if (ok) {
-          FlowRunnerService.stopFlow();
-          this.destroy();
-          await TauriService.exitMiniMode();
-          router.navigate('home');
-        }
-      });
+    // Botón de cierre directo (cancela el flujo de inmediato sin pedir confirmación)
+    view.querySelector('#btn-close-session')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      FlowRunnerService.stopFlow();
+      this.destroy();
+      await TauriService.exitMiniMode();
+      router.navigate('home');
+    });
     };
 
-    // Arrastre fluido de la ventana con el ratón
+    // Arrastre con el ratón
     view.addEventListener('mousedown', (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
       if (e.button === 0) TauriService.startDragging();
