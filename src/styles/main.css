@@ -1435,3 +1435,187 @@ html, body {
   -moz-appearance: textfield ;
   appearance: textfield ;
 }
+/* --- SHELL DE APLICACIÓN Y BARRA ULTRA-DELGADA ESTILO WINDOWS 11 --- */
+.app-root-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-main, #0f0f13);
+}
+
+.system-titlebar {
+  height: 32px;
+  background-color: #0b0b0e;
+  border-bottom: 1px solid #181820;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 5000;
+  flex-shrink: 0;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: 6px;
+  gap: 6px;
+}
+
+/* El botón de hamburguesa se oculta en pantalla normal */
+.titlebar-burger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #888898;
+  height: 24px;
+  width: 26px;
+  border-radius: 4px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.titlebar-burger-btn:hover {
+  color: #fff;
+  background-color: #1e1e28;
+}
+
+.titlebar-app-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 4px;
+}
+
+.titlebar-title-text {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 0.78rem;
+  color: #9999a8;
+  font-weight: 500;
+}
+
+.titlebar-drag-spacer {
+  flex: 1;
+  height: 100%;
+}
+
+/* BOTONES DE VENTANA (MIN, MAX, CLOSE) */
+.system-window-buttons {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.sys-btn {
+  background: transparent;
+  border: none;
+  color: #888898;
+  width: 46px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.sys-btn:hover {
+  background-color: #1c1c24;
+  color: #fff;
+}
+
+.sys-btn.sys-close:hover {
+  background-color: #e81123;
+  color: #fff;
+}
+
+/* ESTRUCTURA GENERAL Y COMPORTAMIENTO RESPONSIVO */
+.app-layout {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 32px);
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar {
+  width: 220px;
+  height: 100%;
+  background-color: #0e0e12;
+  border-right: 1px solid #1a1a22;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.2rem 1rem;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.main-viewport {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* MODO VENTANA PEQUEÑA: Activa el botón de hamburguesa en la barra superior */
+@media (max-width: 720px) {
+  .titlebar-burger-btn {
+    display: flex;
+  }
+
+  .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter : blur(2px);
+    z-index: 90;
+  }
+
+  .sidebar-backdrop.active {
+    display: block;
+  }
+}
+/* --- FIX DE ARRASTRE EN BARRA DE TÍTULO --- */
+.system-titlebar {
+  cursor: default;
+}
+
+.titlebar-app-identity,
+.titlebar-app-identity * {
+  pointer-events: none; /* Permite que el clic atraviese hacia la barra */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar-drag-spacer {
+  pointer-events: none;
+}
+
+.system-window-buttons,
+.titlebar-burger-btn {
+  pointer-events: auto; /* Asegura que los botones sigan recibiendo clics */
+}
