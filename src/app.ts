@@ -8,7 +8,9 @@ import { OnboardingView } from './views/OnboardingView';
 import { StorageService } from './services/storage.service';
 import { ModalService } from './services/modal.service';
 import { TauriService } from './services/tauri.service';
-import { UI_ICONS } from './utils/icons';
+import { FlowRunnerService } from './services/flow-runner.service';
+import { UI_ICONS, BLOCK_ICONS_SVG } from './utils/icons';
+import { formatTimerSeconds } from './utils/format';
 
 export type Route = 'home' | 'flow-editor' | 'active-timer' | 'live-timer' | 'calendar' | 'onboarding';
 
@@ -61,10 +63,9 @@ export class AppRouter {
     layout.className = 'app-root-shell';
 
     layout.innerHTML = `
-      <!-- BARRA DE TÍTULO NATIVA ULTRA-DELGADA -->
+      <!-- BARRA DE TÍTULO ULTRA-DELGADA -->
       <header class="system-titlebar" data-tauri-drag-region="true">
         <div class="titlebar-left" data-tauri-drag-region="true">
-          <!-- Botón de menú: visible solo en pantalla reducida -->
           <button class="titlebar-burger-btn" id="btn-toggle-sidebar" title="Menú lateral">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
               <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -73,7 +74,6 @@ export class AppRouter {
             </svg>
           </button>
 
-          <!-- Icono y Nombre -->
           <div class="titlebar-app-identity" data-tauri-drag-region="true">
             <svg class="titlebar-logo-svg" width="16" height="16" viewBox="0 0 160 160">
               <circle cx="80" cy="80" r="70" fill="#141418" stroke="#1c1c22" stroke-width="4"/>
@@ -89,10 +89,8 @@ export class AppRouter {
           </div>
         </div>
 
-        <!-- Área de arrastre central libre -->
         <div class="titlebar-drag-spacer" data-tauri-drag-region="true"></div>
 
-        <!-- Botones nativos de ventana -->
         <div class="system-window-buttons">
           <button class="sys-btn" id="sys-win-min" title="Minimizar">
             <svg width="10" height="1" viewBox="0 0 10 1"><line x1="0" y1="0.5" x2="10" y2="0.5" stroke="currentColor" stroke-width="1"/></svg>
@@ -109,7 +107,7 @@ export class AppRouter {
         </div>
       </header>
 
-      <!-- CUERPO PRINCIPAL -->
+      <!-- LAYOUT PRINCIPAL -->
       <div class="app-layout">
         <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
         
@@ -143,42 +141,48 @@ export class AppRouter {
         </aside>
 
         <main class="main-viewport" id="route-container"></main>
+
+        <!-- WIDGET FLOTANTE DE ESQUINA EN VISTA GRANDE -->
+        <div id="corner-running-widget" class="corner-flow-widget" style="display: none;"></div>
       </div>
     `;
 
     const routeContainer = layout.querySelector('#route-container') as HTMLElement;
-    routeContainer.appendChild(this.getViewElement(this.currentRoute, params));
+    
+    // Inserción segura de la vista
+    try {
+      const viewElement = this.getViewElement(this.currentRoute, params);
+      routeContainer.appendChild(viewElement);
+    } catch (err) {
+      console.error(`Error al renderizar la vista ${this.currentRoute}:`, err);
+      routeContainer.innerHTML = `<div style="padding: 2rem; color: #f87171;">Error al cargar la vista. Revisa la consola.</div>`;
+    }
 
     this.bindEvents(layout);
     this.appElement.appendChild(layout);
   }
 
   private bindEvents(layout: HTMLElement): void {
-    // 1. Botones de ventana nativos
+    // 1. Controles de Ventana y Arrastre
     layout.querySelector('#sys-win-min')?.addEventListener('click', () => TauriService.minimize());
     layout.querySelector('#sys-win-max')?.addEventListener('click', () => TauriService.toggleMaximize());
     layout.querySelector('#sys-win-close')?.addEventListener('click', () => TauriService.close());
 
-    // 2. Comportamiento del Menú Lateral (Drawer responsive)
-    const sidebar = layout.querySelector('#app-sidebar') as HTMLElement;
-    const backdrop = layout.querySelector('#sidebar-backdrop') as HTMLElement;
     const titlebar = layout.querySelector('.system-titlebar') as HTMLElement;
-    const toggleBtn = layout.querySelector('#btn-toggle-sidebar');
-
     titlebar?.addEventListener('mousedown', (e: MouseEvent) => {
-      // Ignorar si se hace clic sobre un botón
       if ((e.target as HTMLElement).closest('button')) return;
-      
-      if (e.button === 0) { // Clic izquierdo
-        TauriService.startDragging();
-      }
+      if (e.button === 0) TauriService.startDragging();
     });
 
-    // Doble clic en la barra para maximizar o restaurar (comportamiento estándar de Windows)
     titlebar?.addEventListener('dblclick', (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
       TauriService.toggleMaximize();
     });
+
+    // 2. Control de Menú Lateral
+    const sidebar = layout.querySelector('#app-sidebar') as HTMLElement;
+    const backdrop = layout.querySelector('#sidebar-backdrop') as HTMLElement;
+    const toggleBtn = layout.querySelector('#btn-toggle-sidebar');
 
     const toggleSidebar = () => {
       const isOpen = sidebar.classList.toggle('open');
@@ -192,10 +196,14 @@ export class AppRouter {
     toggleBtn?.addEventListener('click', toggleSidebar);
     backdrop?.addEventListener('click', toggleSidebar);
 
-    // 3. Navegación
+    // 3. Navegación con Bloqueo si hay flujo en curso
     layout.querySelectorAll('.nav-item').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         const route = (e.currentTarget as HTMLElement).getAttribute('data-route') as Route;
+        if (route === 'live-timer' && FlowRunnerService.isBusy()) {
+          await ModalService.alert('Flujo en curso', 'Tienes un flujo de bloques activo. Termínalo antes de usar el cronómetro libre.', UI_ICONS.alert);
+          return;
+        }
         sidebar.classList.remove('open');
         backdrop.classList.remove('active');
         if (route) this.navigate(route);
@@ -220,6 +228,42 @@ export class AppRouter {
       if (newName !== null && newName.trim() !== '') {
         StorageService.saveUser(newName.trim().slice(0, 20));
         this.refreshCurrentRoute();
+      }
+    });
+
+    // 5. Suscripción del Widget Flotante de Esquina
+    const cornerWidget = layout.querySelector('#corner-running-widget') as HTMLElement;
+    FlowRunnerService.subscribe(() => {
+      const status = FlowRunnerService.getStatus();
+      if (!status || this.currentRoute === 'active-timer') {
+        if (cornerWidget) cornerWidget.style.display = 'none';
+        return;
+      }
+
+      if (cornerWidget) {
+        cornerWidget.style.display = 'flex';
+        cornerWidget.className = `corner-flow-widget ${status.currentBlock.type.toLowerCase()}`;
+        cornerWidget.innerHTML = `
+          <div class="corner-info-col">
+            <span class="corner-flow-name">${status.flowName}</span>
+            <div class="corner-time-row">
+              ${BLOCK_ICONS_SVG[status.currentBlock.type]}
+              <span class="corner-timer-digits">${formatTimerSeconds(status.secondsRemaining)}</span>
+            </div>
+          </div>
+          <button class="corner-btn-expand" id="btn-corner-expand" title="Abrir widget flotante">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        `;
+
+        cornerWidget.querySelector('#btn-corner-expand')?.addEventListener('click', () => {
+          this.navigate('active-timer');
+        });
       }
     });
   }

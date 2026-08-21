@@ -1,204 +1,145 @@
 // src/views/ActiveTimerView.ts
 import { AppRouter } from '../app';
 import { StorageService } from '../services/storage.service';
-import { Flow, Block } from '../models/flow.model';
-import { BLOCK_ICONS_SVG } from '../utils/icons';
-import { AudioService } from '../services/audio.service';
+import { FlowRunnerService } from '../services/flow-runner.service';
 import { TauriService } from '../services/tauri.service';
+import { BLOCK_ICONS_SVG, UI_ICONS } from '../utils/icons';
 import { formatTimerSeconds } from '../utils/format';
-
+import { ModalService } from '../services/modal.service';
 
 export class ActiveTimerView {
-  private static flow: Flow | null = null;
-  private static currentBlockIndex: number = 0;
-  private static timeRemainingSeconds: number = 0;
-  private static timerInterval: number | null = null;
-  private static isRunning: boolean = true;
-  private static router: AppRouter;
+  private static unsubscribe: (() => void) | null = null;
 
   static render(router: AppRouter, params: Record<string, unknown> = {}): HTMLElement {
-    this.router = router;
     const view = document.createElement('div');
-    view.className = 'mini-widget-container';
-    view.setAttribute('data-tauri-drag-region', 'true');
+    view.className = 'active-timer-pip-wrapper';
 
-    // Activar modo mini flotante en Tauri
-    TauriService.enterMiniMode();
-
-    const flowId = params.flowId as string;
-    const flows = StorageService.getFlows();
-    this.flow = flows.find(f => f.id === flowId) || flows[0] || null;
-
-    if (!this.flow || this.flow.blocks.length === 0) {
-      this.exitToHome();
-      return view;
+    // Iniciar flujo si se pasa un nuevo flowId
+    if (params.flowId) {
+      const flow = StorageService.getFlows().find(f => f.id === params.flowId);
+      if (flow) FlowRunnerService.startFlow(flow);
     }
 
-    this.currentBlockIndex = 0;
-    this.initCurrentBlock();
+    TauriService.enterMiniMode();
 
-    this.renderWidget(view);
-    this.startTimer(view);
+    const updateUI = () => {
+      const status = FlowRunnerService.getStatus();
+      if (!status) {
+        this.destroy();
+        TauriService.exitMiniMode();
+        router.navigate('home');
+        return;
+      }
 
+      const { flowName, currentBlockIndex, totalBlocks, currentBlock, nextBlock, secondsRemaining, isRunning } = status;
+      const type = currentBlock.type;
+
+      view.innerHTML = `
+        <div class="pip-card ${type.toLowerCase()}">
+          <!-- CABECERA DE ARRASTRE -->
+          <div class="pip-topbar">
+            <div class="pip-phase-tag ${type.toLowerCase()}">
+              ${BLOCK_ICONS_SVG[type]}
+              <span class="pip-phase-name">${type}</span>
+              <span class="pip-phase-count">${currentBlockIndex + 1}/${totalBlocks}</span>
+            </div>
+
+            <div class="pip-top-actions">
+              <!-- Volver a pantalla grande -->
+              <button class="pip-icon-btn" id="btn-return-big" title="Expandir a vista principal">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <polyline points="9 21 3 21 3 15"></polyline>
+                  <line x1="21" y1="3" x2="14" y2="10"></line>
+                  <line x1="3" y1="21" x2="10" y2="14"></line>
+                </svg>
+              </button>
+              <!-- Cerrar / Cancelar sesión -->
+              <button class="pip-icon-btn close" id="btn-close-session" title="Terminar sesión">
+                ${UI_ICONS.close}
+              </button>
+            </div>
+          </div>
+
+          <!-- NÚCLEO: TIEMPO Y TÍTULO -->
+          <div class="pip-main-body">
+            <span class="pip-flow-name" title="${flowName}">${flowName}</span>
+            <div class="pip-digits ${type.toLowerCase()}">
+              ${formatTimerSeconds(secondsRemaining)}
+            </div>
+            <div class="pip-next-preview">
+              ${nextBlock 
+                ? `<span>Sig:</span> <span class="pip-next-highlight ${nextBlock.type.toLowerCase()}">${nextBlock.type.toLowerCase()} (${nextBlock.durationMinutes}m)</span>` 
+                : `<span class="pip-next-last">Último bloque</span>`
+              }
+            </div>
+          </div>
+
+          <!-- CONTROLES INFERIORES -->
+          <div class="pip-controls-row">
+            <button class="pip-ctrl-btn" id="btn-reset-block" title="Reiniciar bloque">
+              ${UI_ICONS.reset}
+            </button>
+            <button class="pip-play-btn ${type.toLowerCase()}" id="btn-toggle-play" title="${isRunning ? 'Pausar' : 'Reanudar'}">
+              ${isRunning ? UI_ICONS.pause : UI_ICONS.play}
+            </button>
+            <button class="pip-ctrl-btn" id="btn-skip-block" title="Siguiente bloque">
+              ${UI_ICONS.skip}
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Eventos
+      view.querySelector('#btn-toggle-play')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isRunning ? FlowRunnerService.pause() : FlowRunnerService.resume();
+      });
+
+      view.querySelector('#btn-reset-block')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        FlowRunnerService.resetCurrentBlock();
+      });
+
+      view.querySelector('#btn-skip-block')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        FlowRunnerService.nextBlock();
+      });
+
+      view.querySelector('#btn-return-big')?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        this.destroy();
+        await TauriService.exitMiniMode();
+        router.navigate('home');
+      });
+
+      view.querySelector('#btn-close-session')?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const ok = await ModalService.confirm('¿Terminar sesión?', 'Se cancelará el flujo en curso.', UI_ICONS.alert);
+        if (ok) {
+          FlowRunnerService.stopFlow();
+          this.destroy();
+          await TauriService.exitMiniMode();
+          router.navigate('home');
+        }
+      });
+    };
+
+    // Arrastre fluido de la ventana con el ratón
+    view.addEventListener('mousedown', (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      if (e.button === 0) TauriService.startDragging();
+    });
+
+    this.unsubscribe = FlowRunnerService.subscribe(updateUI);
+    updateUI();
     return view;
   }
 
-  private static initCurrentBlock() {
-    if (!this.flow) return;
-    const block = this.flow.blocks[this.currentBlockIndex];
-    this.timeRemainingSeconds = block.durationMinutes * 60;
-  }
-
-  private static renderWidget(view: HTMLElement) {
-    if (!this.flow) return;
-    const currentBlock = this.flow.blocks[this.currentBlockIndex];
-    const nextBlock: Block | undefined = this.flow.blocks[this.currentBlockIndex + 1];
-    const blockTypeLower = currentBlock.type.toLowerCase();
-
-    view.innerHTML = `
-      <!-- Encabezado con soporte Drag para mover la mini-ventana -->
-      <div class="mini-header" data-tauri-drag-region="true">
-        <div class="mini-badge ${blockTypeLower}">
-          ${BLOCK_ICONS_SVG[currentBlock.type]}
-          <span>${currentBlock.type.charAt(0) + currentBlock.type.slice(1).toLowerCase()}</span>
-        </div>
-        <div class="mini-actions">
-          <button class="mini-close-btn" id="btn-close-mini" title="Cerrar y volver al inicio">✕</button>
-        </div>
-      </div>
-
-      <!-- Tiempo digital con color característico -->
-      <div class="mini-timer-time ${blockTypeLower}" id="mini-time-text">
-        ${this.formatTime(this.timeRemainingSeconds)}
-      </div>
-
-      <!-- Próxima acción -->
-      <div class="mini-next-info">
-        ${nextBlock ? `
-          <span>Siguiente:</span>
-          <span style="display:inline-flex; align-items:center; gap:3px;">
-            ${BLOCK_ICONS_SVG[nextBlock.type]} ${nextBlock.type.charAt(0) + nextBlock.type.slice(1).toLowerCase()} (${nextBlock.durationMinutes}m)
-          </span>
-        ` : '<span>Último bloque del flujo</span>'}
-      </div>
-
-      <!-- Controles esenciales -->
-      <div class="mini-controls-row">
-        <button class="mini-ctrl-btn" id="btn-reset-block" title="Reiniciar bloque">↺</button>
-        <button class="mini-play-btn ${blockTypeLower}" id="btn-toggle-play" title="${this.isRunning ? 'Pausar' : 'Reanudar'}">
-          ${this.isRunning ? '⏸' : '▶'}
-        </button>
-        <button class="mini-ctrl-btn" id="btn-skip-block" title="Siguiente bloque">⏭</button>
-      </div>
-    `;
-
-    this.bindEvents(view);
-  }
-
-  private static bindEvents(view: HTMLElement) {
-    // Cerrar / Detener y restaurar tamaño
-    view.querySelector('#btn-close-mini')?.addEventListener('click', () => {
-      this.stopTimer();
-      this.exitToHome();
-    });
-
-    // Play / Pausa
-    view.querySelector('#btn-toggle-play')?.addEventListener('click', () => {
-      this.isRunning = !this.isRunning;
-      const playBtn = view.querySelector('#btn-toggle-play');
-      if (playBtn) playBtn.textContent = this.isRunning ? '⏸' : '▶';
-    });
-
-    // Reiniciar bloque actual
-    view.querySelector('#btn-reset-block')?.addEventListener('click', () => {
-      this.initCurrentBlock();
-      this.updateTimeDisplay(view);
-    });
-
-    // Saltar al siguiente bloque
-    view.querySelector('#btn-skip-block')?.addEventListener('click', () => {
-      this.nextBlock(view);
-    });
-  }
-
-  private static startTimer(view: HTMLElement) {
-    this.stopTimer();
-    this.isRunning = true;
-
-    this.timerInterval = window.setInterval(() => {
-      if (!this.isRunning) return;
-
-      if (this.timeRemainingSeconds > 0) {
-        this.timeRemainingSeconds--;
-        this.updateTimeDisplay(view);
-      } else {
-        AudioService.playNotificationSound();
-        const currentBlock = this.flow?.blocks[this.currentBlockIndex];
-        if (currentBlock) {
-          TauriService.notifyBlockFinished(
-            '¡Bloque completado!',
-            `Has terminado ${currentBlock.type.toLowerCase()} de ${currentBlock.durationMinutes}m.`
-          );
-        }
-        this.nextBlock(view);
-      }
-    }, 1000);
-  }
-
-  private static nextBlock(view: HTMLElement) {
-    if (!this.flow) return;
-
-    if (this.currentBlockIndex < this.flow.blocks.length - 1) {
-      this.currentBlockIndex++;
-      this.initCurrentBlock();
-      this.renderWidget(view);
-    } else {
-      // Fin del flujo completo
-      this.stopTimer();
-      type BlockType = /*unresolved*/ any;
-      const breakdown: Record<BlockType, number> = {
-        ENFOQUE: 0, DESCANSO: 0, MOVIMIENTO: 0, PROCRASTINAR: 0
-      };
-      let totalMinutes = 0;
-      this.flow.blocks.forEach(b => {
-        breakdown[b.type] += b.durationMinutes;
-        totalMinutes += b.durationMinutes;
-      });
-      StorageService.recordSession({
-        id: crypto.randomUUID(),
-        flowId: this.flow.id,
-        flowName: this.flow.name,
-        completedAt: new Date().toISOString(),
-        totalDurationMinutes: totalMinutes,
-        breakdown: breakdown
-      });
-      AudioService.playNotificationSound();
-      TauriService.notifyBlockFinished('¡Flujo terminado!', `Has completado "${this.flow.name}". ¡Excelente trabajo!`);
-      this.exitToHome();
+  private static destroy(): void {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
     }
-  }
-
-  private static updateTimeDisplay(view: HTMLElement) {
-    const timeText = view.querySelector('#mini-time-text');
-    if (timeText) {
-      timeText.textContent = this.formatTime(this.timeRemainingSeconds);
-    }
-  }
-
-  private static stopTimer() {
-    if (this.timerInterval !== null) {
-      clearInterval(this.timerInterval);
-      this.timerInterval = null;
-    }
-  }
-
-  private static async exitToHome() {
-    this.stopTimer();
-    await TauriService.exitMiniMode();
-    this.router.navigate('home');
-  }
-
-  private static formatTime(seconds: number): string {
-    return formatTimerSeconds(seconds);
   }
 }

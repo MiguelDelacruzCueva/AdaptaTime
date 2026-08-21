@@ -4,7 +4,15 @@
   margin: 0;
   padding: 0;
 }
-
+:root {
+  /* TIPOGRAFÍAS */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  
+  /* Elige una de estas tres opciones para tus números: */
+  --font-timer: 'Space Grotesk', sans-serif; /* Opción 1: Geométrica, limpia y fina */
+  /* --font-timer: 'Space Grotesk', sans-serif; */ /* Opción 2: Técnica, recta y moderna */
+  /* --font-timer: 'JetBrains Mono', monospace; */ /* Opción 3: Digital minimalista de código */
+}
 body {
   background-color: var(--bg-main);
   color: var(--text-main);
@@ -1618,4 +1626,352 @@ html, body {
 .system-window-buttons,
 .titlebar-burger-btn {
   pointer-events: auto; /* Asegura que los botones sigan recibiendo clics */
+}
+
+/* --- MINI-WIDGET COMPACTO (PIP) --- */
+.active-timer-pip-wrapper {
+  width: 100vw;
+  height: 100vh;
+  background-color: #0b0b0e;
+  overflow: hidden;
+  user-select: none;
+  cursor: grab;
+  box-sizing: border-box;
+  -webkit-user-select: none;
+}
+
+.active-timer-pip-wrapper:active {
+  cursor: grabbing;
+}
+
+.timer-mini-card {
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem 0.9rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.mini-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mini-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mini-icon-btn {
+  background: transparent;
+  border: none;
+  color: #777788;
+  padding: 0.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.mini-icon-btn:hover {
+  color: #fff;
+  background-color: #1e1e26;
+}
+
+.mini-icon-btn.close:hover {
+  color: #f87171;
+  background-color: rgba(248, 113, 113, 0.15);
+}
+
+.mini-clock-display {
+  font-family: var(--font-serif, serif);
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #e5c158;
+  letter-spacing: -0.02em;
+  margin: -0.2rem 0;
+}
+
+.mini-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.mini-play-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e5c158;
+  color: #000;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* WIDGET FLOTANTE DE ESQUINA EN VISTA COMPLETA */
+.corner-flow-widget {
+  position: absolute;
+  bottom: 1.2rem;
+  right: 1.4rem;
+  background-color: #15151c;
+  border: 1px solid #282834;
+  border-left: 3px solid var(--color-enfoque, #e5c158);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  z-index: 1000;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  animation: slideInCorner 0.2s ease forwards;
+}
+
+.corner-info-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.corner-flow-name {
+  font-size: 0.68rem;
+  color: #777788;
+  font-weight: 600;
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.corner-time-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.corner-btn-expand {
+  background-color: #20202a;
+  border: none;
+  color: #aaaab8;
+  padding: 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.corner-btn-expand:hover {
+  background-color: #2a2a38;
+  color: #fff;
+}
+
+@keyframes slideInCorner {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.pip-card {
+  width: 100%;
+  height: 100%;
+  padding: 0.65rem 0.85rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #1f1f28;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 0%, #171720 0%, #0d0d12 100%);
+  position: relative;
+}
+
+.pip-card.enfoque { border-top: 2px solid var(--color-enfoque, #e5c158); }
+.pip-card.descanso { border-top: 2px solid var(--color-descanso, #60a5fa); }
+.pip-card.movimiento { border-top: 2px solid var(--color-movimiento, #4ade80); }
+.pip-card.procrastinar { border-top: 2px solid var(--color-procrastinar, #f87171); }
+
+/* Barra superior */
+.pip-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.pip-phase-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pip-phase-tag.enfoque { color: var(--color-enfoque, #e5c158); border-color: rgba(229, 193, 88, 0.2); }
+.pip-phase-tag.descanso { color: var(--color-descanso, #60a5fa); border-color: rgba(96, 165, 250, 0.2); }
+.pip-phase-tag.movimiento { color: var(--color-movimiento, #4ade80); border-color: rgba(74, 222, 128, 0.2); }
+.pip-phase-tag.procrastinar { color: var(--color-procrastinar, #f87171); border-color: rgba(248, 113, 113, 0.2); }
+
+.pip-phase-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pip-phase-count {
+  font-size: 0.62rem;
+  color: #777788;
+  padding-left: 0.15rem;
+}
+
+.pip-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pip-icon-btn {
+  background: transparent;
+  border: none;
+  color: #777788;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.pip-icon-btn:hover {
+  color: #fff;
+  background-color: #1e1e28;
+}
+
+.pip-icon-btn.close:hover {
+  color: #f87171;
+  background-color: rgba(248, 113, 113, 0.15);
+}
+
+/* Cuerpo central */
+.pip-main-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: -0.1rem 0;
+}
+
+.pip-flow-name {
+  font-size: 0.68rem;
+  color: #888898;
+  font-weight: 500;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pip-digits {
+  font-family: var(--font-timer);
+  font-size: 2.6rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0.2rem 0;
+}
+
+.pip-digits.enfoque { color: var(--color-enfoque, #e5c158); }
+.pip-digits.descanso { color: var(--color-descanso, #60a5fa); }
+.pip-digits.movimiento { color: var(--color-movimiento, #4ade80); }
+.pip-digits.procrastinar { color: var(--color-procrastinar, #f87171); }
+
+.pip-next-preview {
+  font-size: 0.68rem;
+  color: #666675;
+  margin-top: 0.15rem;
+}
+
+.pip-next-highlight {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.pip-next-highlight.enfoque { color: var(--color-enfoque, #e5c158); }
+.pip-next-highlight.descanso { color: var(--color-descanso, #60a5fa); }
+.pip-next-highlight.movimiento { color: var(--color-movimiento, #4ade80); }
+.pip-next-highlight.procrastinar { color: var(--color-procrastinar, #f87171); }
+
+.pip-next-last {
+  color: #555562;
+  font-style: italic;
+}
+
+/* Fila de controles */
+.pip-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+}
+
+.pip-ctrl-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #777788;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.pip-ctrl-btn:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.pip-play-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.pip-play-btn.enfoque { background-color: var(--color-enfoque, #e5c158); }
+.pip-play-btn.descanso { background-color: var(--color-descanso, #60a5fa); }
+.pip-play-btn.movimiento { background-color: var(--color-movimiento, #4ade80); }
+.pip-play-btn.procrastinar { background-color: var(--color-procrastinar, #f87171); }
+
+.pip-play-btn:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05);
 }

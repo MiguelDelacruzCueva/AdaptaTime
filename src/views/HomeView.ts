@@ -5,6 +5,7 @@ import { Flow, BlockType } from '../models/flow.model';
 import { BLOCK_ICONS_SVG, UI_ICONS } from '../utils/icons';
 import { ModalService } from '../services/modal.service';
 import { formatMinutesReadable } from '../utils/format';
+import { FlowRunnerService } from '../services/flow-runner.service';
 
 export class HomeView {
   private static isEditingName: boolean = false;
@@ -19,6 +20,7 @@ export class HomeView {
     });
     const tasks = StorageService.getTasks();
 
+
     const history = StorageService.getHistory();
     const todayStr = new Date().toISOString().split('T')[0];
     const todayMinutes = history
@@ -27,9 +29,6 @@ export class HomeView {
 
     const goalMinutes = StorageService.getDailyGoal();
     const goalPercent = Math.min(100, Math.round((todayMinutes / goalMinutes) * 100));
-
-    const userName = user ? user.name : 'Usuario';
-    const greetingText = this.getGreetingByTime();
 
     view.innerHTML = `
       <div class="dashboard-grid">
@@ -170,6 +169,7 @@ export class HomeView {
       });
     }
 
+
     const breakdownHTML = (Object.keys(totals) as BlockType[])
       .filter(type => totals[type] > 0)
       .map(type => `
@@ -233,6 +233,7 @@ export class HomeView {
   }
 
   private static bindEvents(view: HTMLElement, router: AppRouter) {
+    const isBusy = FlowRunnerService.isBusy();
     view.querySelector('#btn-edit-name')?.addEventListener('click', () => {
       this.isEditingName = true;
       router.navigate('home');
@@ -333,6 +334,37 @@ export class HomeView {
     view.querySelectorAll('[data-play-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
+        router.navigate('active-timer', { flowId: id });
+      });
+    });
+    const btnLive = view.querySelector('#btn-start-live') as HTMLButtonElement;
+    if (btnLive) {
+      if (isBusy) {
+        btnLive.style.opacity = '0.35';
+        btnLive.style.cursor = 'not-allowed';
+      }
+      btnLive.addEventListener('click', async () => {
+        if (FlowRunnerService.isBusy()) {
+          await ModalService.alert('Sesión en marcha', 'Ya tienes un flujo ejecutándose.', UI_ICONS.alert);
+          return;
+        }
+        router.navigate('live-timer');
+      });
+    }
+
+    view.querySelectorAll('[data-play-id]').forEach(btn => {
+      const el = btn as HTMLElement;
+      if (isBusy) {
+        el.style.opacity = '0.35';
+        el.style.cursor = 'not-allowed';
+      }
+      el.addEventListener('click', async (e) => {
+        if (FlowRunnerService.isBusy()) {
+          e.stopPropagation();
+          await ModalService.alert('Flujo activo', 'Ya tienes una secuencia en ejecución. Revisa la esquina inferior derecha.', UI_ICONS.alert);
+          return;
+        }
+        const id = el.getAttribute('data-play-id');
         router.navigate('active-timer', { flowId: id });
       });
     });
