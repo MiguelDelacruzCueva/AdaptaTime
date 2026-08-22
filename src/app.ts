@@ -170,6 +170,7 @@ export class AppRouter {
     layout.querySelector('#sys-win-close')?.addEventListener('click', () => TauriService.close());
 
     const titlebar = layout.querySelector('.system-titlebar') as HTMLElement;
+   
     titlebar?.addEventListener('mousedown', (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
       if (e.button === 0) TauriService.startDragging();
@@ -199,6 +200,54 @@ export class AppRouter {
 
     // 3. Navegación fluida (Sin modales invasivos)
     const cornerWidget = layout.querySelector('#corner-running-widget') as HTMLElement;
+FlowRunnerService.subscribe(() => {
+      const status = FlowRunnerService.getStatus();
+      if (!status || this.currentRoute === 'active-timer') {
+        if (cornerWidget) cornerWidget.style.display = 'none';
+        return;
+      }
+
+      if (cornerWidget) {
+        cornerWidget.style.display = 'flex';
+        cornerWidget.className = `corner-flow-widget ${status.currentBlock.type.toLowerCase()}`;
+        cornerWidget.innerHTML = `
+          <div class="corner-info-col">
+            <span class="corner-flow-name" title="${status.flowName}">${status.flowName}</span>
+            <div class="corner-time-row">
+              ${BLOCK_ICONS_SVG[status.currentBlock.type]}
+              <span class="corner-timer-digits">${formatTimerSeconds(status.secondsRemaining)}</span>
+            </div>
+          </div>
+
+          <div class="corner-actions-group">
+            <button class="corner-btn-action" id="btn-corner-expand" title="Abrir widget flotante">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+            </button>
+
+            <button class="corner-btn-action close" id="btn-corner-close" title="Cancelar flujo">
+              ${UI_ICONS.close}
+            </button>
+          </div>
+        `;
+
+        // Expandir a mini-widget
+        cornerWidget.querySelector('#btn-corner-expand')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.navigate('active-timer');
+        });
+
+        // Cancelar y cerrar flujo directamente desde la esquina
+        cornerWidget.querySelector('#btn-corner-close')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          FlowRunnerService.stopFlow();
+        });
+      }
+    });
 
     layout.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -271,6 +320,7 @@ export class AppRouter {
       }
     });
   }
+  
 
   private getViewElement(route: Route, params: Record<string, unknown>): HTMLElement {
     switch (route) {

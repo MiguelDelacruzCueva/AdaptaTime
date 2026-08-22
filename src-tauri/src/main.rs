@@ -35,6 +35,7 @@ fn close_app(window: tauri::WebviewWindow) {
 
 #[tauri::command]
 fn enter_mini_mode(window: tauri::WebviewWindow) {
+    let _ = window.set_resizable(true);
     let _ = window.set_min_size(Some(tauri::LogicalSize::new(260.0, 150.0)));
     let _ = window.set_size(tauri::LogicalSize::new(300.0, 170.0));
     let _ = window.set_always_on_top(true);
@@ -45,8 +46,12 @@ fn enter_mini_mode(window: tauri::WebviewWindow) {
 fn exit_mini_mode(window: tauri::WebviewWindow) {
     let _ = window.set_always_on_top(false);
     let _ = window.set_resizable(true);
-    let _ = window.set_min_size(Some(tauri::LogicalSize::new(480.0, 600.0)));
+    // 1. Quitar límite mínimo temporalmente para que Windows no bloquee el resize
+    let _ = window.set_min_size(None::<tauri::LogicalSize<f64>>);
+    // 2. Restaurar tamaño estándar de la app principal
     let _ = window.set_size(tauri::LogicalSize::new(980.0, 680.0));
+    // 3. Volver a aplicar el límite mínimo estándar y centrar
+    let _ = window.set_min_size(Some(tauri::LogicalSize::new(480.0, 500.0)));
     let _ = window.center();
 }
 
