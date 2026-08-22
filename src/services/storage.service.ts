@@ -8,18 +8,20 @@ const KEYS = {
   FLOWS: 'focus_flow_flows',
   HISTORY: 'focus_flow_history'
 };
+
 export interface TaskItem {
   id: string;
   title: string;
   completed: boolean;
 }
+
 export interface HistoryItem {
   id: string;
   flowId?: string;
   flowName: string;
   completedAt: string;
   totalDurationMinutes: number;
-  completedBlocks?: number;  
+  completedBlocks?: number;
   totalBlocks?: number;
   breakdown?: Record<BlockType, number>;
 }
@@ -54,18 +56,23 @@ export class StorageService {
     localStorage.setItem(KEYS.FLOWS, JSON.stringify(flows));
   }
 
+  static deleteFlow(id: string): void {
+    const flows = this.getFlows().filter(f => f.id !== id);
+    localStorage.setItem(KEYS.FLOWS, JSON.stringify(flows));
+  }
+
   // --- HISTORIAL ---
   static getHistory(): HistoryItem[] {
     const data = localStorage.getItem('focus_flow_history');
     return data ? JSON.parse(data) : [];
   }
-  
 
   static addHistoryEntry(entry: SessionHistory): void {
     const history = this.getHistory();
-    history.unshift(entry); // Añade al inicio
+    history.unshift(entry);
     localStorage.setItem(KEYS.HISTORY, JSON.stringify(history));
   }
+
   static getTasks(): TaskItem[] {
     const data = localStorage.getItem('focus_flow_tasks');
     return data ? JSON.parse(data) : [
@@ -105,14 +112,16 @@ export class StorageService {
     history.unshift(session);
     localStorage.setItem('focus_flow_history', JSON.stringify(history));
   }
+
   static getDailyGoal(): number {
     const goal = localStorage.getItem('focus_flow_daily_goal');
-    return goal ? parseInt(goal, 10) : 30; // 30 minutos por defecto
+    return goal ? parseInt(goal, 10) : 30;
   }
 
   static setDailyGoal(minutes: number): void {
     localStorage.setItem('focus_flow_daily_goal', minutes.toString());
   }
+
   // --- FECHA DE INICIO DE LA APLICACIÓN ---
   static getAppStartDate(): Date {
     let start = localStorage.getItem('focus_flow_app_start_date');
@@ -122,5 +131,4 @@ export class StorageService {
     }
     return new Date(start);
   }
-  
 }

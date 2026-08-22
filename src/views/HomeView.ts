@@ -330,33 +330,16 @@ export class HomeView {
     document.addEventListener('click', () => {
       view.querySelectorAll('.flow-menu-popover').forEach(pop => pop.classList.remove('active'));
     });
-
-    view.querySelectorAll('[data-play-id]').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
-    
-    if (FlowRunnerService.isBusy()) {
-      const status = FlowRunnerService.getStatus();
-      // Si intentas pulsar OTRO flujo diferente al que está corriendo, lo ignora
-      if (status && status.flow.id !== id) {
-        // Hace vibrar el widget de la esquina en vez de lanzar alertas
-        const corner = document.querySelector('#corner-running-widget');
-        corner?.classList.remove('corner-shake');
-        void (corner as HTMLElement)?.offsetWidth;
-        corner?.classList.add('corner-shake');
-        return;
+    const shakeCorner = () => {
+      const corner = document.querySelector('#corner-running-widget');
+      if (corner) {
+        corner.classList.remove('corner-shake');
+        void (corner as HTMLElement).offsetWidth; // Forzar reflow para reiniciar la animación
+        corner.classList.add('corner-shake');
       }
-      // Si pulsas el MISMO flujo en ejecución, abre su widget
-      router.navigate('active-timer');
-      return;
-    }
+    };
 
-    if (id) {
-      router.navigate('active-timer', { flowId: id });
-    }
-  });
-});
+    
     const btnLive = view.querySelector('#btn-start-live') as HTMLButtonElement;
     if (btnLive) {
       if (isBusy) {
@@ -409,26 +392,50 @@ export class HomeView {
         }
       });
     });
-
-    view.querySelectorAll('.edit-flow-btn').forEach(btn => {
+//'.edit-flow-btn'
+    view.querySelectorAll('[data-edit-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).getAttribute('data-edit-id');
+        if (!id) return;
+
+        // BLOQUEO: Si el flujo a editar está en uso, no entra al editor y sacude el widget
+        if (FlowRunnerService.isBusy()) {
+          const status = FlowRunnerService.getStatus();
+          if (status && status.flow.id === id) {
+            shakeCorner();
+            return;
+          }
+        }
+
         router.navigate('flow-editor', { flowId: id });
       });
     });
-
-    view.querySelectorAll('.delete-flow-btn').forEach(btn => {
+//'.delete-flow-btn'
+    view.querySelectorAll('[data-delete-id]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).getAttribute('data-delete-id');
-        if (id) {
-          const confirmed = await ModalService.confirm('Eliminar flujo', '¿Deseas eliminar este flujo?', UI_ICONS.alert);
-          if (confirmed) {
-            const flows = StorageService.getFlows().filter(f => f.id !== id);
-            localStorage.setItem('focus_flow_flows', JSON.stringify(flows));
-            router.navigate('home');
+        if (!id) return;
+
+        // BLOQUEO: Si el flujo a eliminar está en uso, ignora la eliminación
+        if (FlowRunnerService.isBusy()) {
+          const status = FlowRunnerService.getStatus();
+          if (status && status.flow.id === id) {
+            shakeCorner();
+            return;
           }
+        }
+
+        const ok = await ModalService.confirm(
+          '¿Eliminar flujo?',
+          'Esta acción no se puede deshacer.',
+          UI_ICONS.trash
+        );
+
+        if (ok) {
+          StorageService.deleteFlow(id);
+          router.navigate('home');
         }
       });
     });
