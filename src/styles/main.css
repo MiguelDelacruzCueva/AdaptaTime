@@ -2004,3 +2004,35 @@ html, body {
   50% { transform: translateX(6px); }
   75% { transform: translateX(-3px); }
 }
+/* --- ACCIONES EN EL WIDGET DE ESQUINA --- */
+.corner-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.corner-btn-action {
+  background-color: #1e1e28;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #a0a0b0;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.corner-btn-action:hover {
+  background-color: #2a2a38;
+  color: #fff;
+}
+
+.corner-btn-action.close:hover {
+  background-color: rgba(248, 113, 113, 0.18);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+}
