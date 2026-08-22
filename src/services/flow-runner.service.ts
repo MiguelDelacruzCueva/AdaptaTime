@@ -13,10 +13,7 @@ export class FlowRunnerService {
   private static isRunning: boolean = false;
   private static intervalId: number | null = null;
   private static timeSpent: Record<BlockType, number> = {
-    ENFOQUE: 0,
-    DESCANSO: 0,
-    MOVIMIENTO: 0,
-    PROCRASTINAR: 0
+    ENFOQUE: 0, DESCANSO: 0, MOVIMIENTO: 0, PROCRASTINAR: 0
   };
   private static listeners: Set<FlowListener> = new Set();
 
@@ -42,18 +39,28 @@ export class FlowRunnerService {
   }
 
   static startFlow(flow: Flow): void {
-    this.stopFlow(false);
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
     this.flow = flow;
     this.currentBlockIndex = 0;
     this.timeSpent = { ENFOQUE: 0, DESCANSO: 0, MOVIMIENTO: 0, PROCRASTINAR: 0 };
-    this.loadCurrentBlock();
-    this.resume();
-  }
+    const firstBlock = flow.blocks[0];
+    this.secondsRemaining = (firstBlock ? firstBlock.durationMinutes : 1) * 60;
+    this.isRunning = true;
 
-  private static loadCurrentBlock(): void {
-    if (!this.flow || !this.flow.blocks[this.currentBlockIndex]) return;
-    const block = this.flow.blocks[this.currentBlockIndex];
-    this.secondsRemaining = (block ? block.durationMinutes : 1) * 60;
+    this.intervalId = window.setInterval(() => {
+      if (this.secondsRemaining > 0) {
+        this.secondsRemaining--;
+        const curType = this.flow?.blocks[this.currentBlockIndex]?.type || 'ENFOQUE';
+        this.timeSpent[curType] = (this.timeSpent[curType] || 0) + 1;
+        this.notify();
+      } else {
+        this.nextBlock();
+      }
+    }, 1000);
+
     this.notify();
   }
 
@@ -84,7 +91,9 @@ export class FlowRunnerService {
 
   static resetCurrentBlock(): void {
     if (!this.flow) return;
-    this.loadCurrentBlock();
+    const block = this.flow.blocks[this.currentBlockIndex];
+    this.secondsRemaining = (block ? block.durationMinutes : 1) * 60;
+    this.notify();
   }
 
   static nextBlock(): void {
@@ -94,8 +103,9 @@ export class FlowRunnerService {
     if (this.currentBlockIndex < this.flow.blocks.length - 1) {
       this.currentBlockIndex++;
       const nextB = this.flow.blocks[this.currentBlockIndex];
+      this.secondsRemaining = (nextB ? nextB.durationMinutes : 1) * 60;
       TauriService.notifyBlockFinished('Siguiente bloque', `Iniciando ${nextB.type} (${nextB.durationMinutes}m)`);
-      this.loadCurrentBlock();
+      this.notify();
     } else {
       this.finishFlow();
     }
@@ -103,7 +113,11 @@ export class FlowRunnerService {
 
   static finishFlow(): void {
     if (!this.flow) return;
-    this.pause();
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.isRunning = false;
 
     const breakdown: Record<BlockType, number> = {
       ENFOQUE: Math.round((this.timeSpent.ENFOQUE || 0) / 60),
@@ -126,15 +140,23 @@ export class FlowRunnerService {
     });
 
     TauriService.notifyBlockFinished('¡Flujo terminado!', `Has completado "${this.flow.name}".`);
-    this.stopFlow(false);
-  }
-
-  static stopFlow(shouldNotify = true): void {
-    this.pause();
+    
     this.flow = null;
     this.currentBlockIndex = 0;
     this.secondsRemaining = 0;
-    if (shouldNotify) this.notify();
+    this.notify();
+  }
+
+  static stopFlow(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.isRunning = false;
+    this.flow = null;
+    this.currentBlockIndex = 0;
+    this.secondsRemaining = 0;
+    this.notify();
   }
 
   static subscribe(fn: FlowListener): () => void {

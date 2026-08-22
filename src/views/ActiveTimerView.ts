@@ -8,9 +8,11 @@ import { formatTimerSeconds } from '../utils/format';
 
 export class ActiveTimerView {
   private static unsubscribe: (() => void) | null = null;
+  private static isExiting: boolean = false;
 
   static render(router: AppRouter, params: Record<string, unknown> = {}): HTMLElement {
     document.querySelectorAll('.custom-modal-overlay').forEach(el => el.remove());
+    this.isExiting = false;
     const view = document.createElement('div');
     view.className = 'active-timer-pip-wrapper';
 
@@ -25,17 +27,26 @@ export class ActiveTimerView {
 
     TauriService.enterMiniMode();
 
+    const exitToHome = async () => {
+      if (this.isExiting) return;
+      this.isExiting = true;
+      this.destroy();
+      await TauriService.exitMiniMode();
+      router.navigate('home');
+    };
+
     const updateUI = () => {
+      if (this.isExiting) return;
+
       const status = FlowRunnerService.getStatus();
       if (!status) {
-        this.destroy();
-        TauriService.exitMiniMode();
-        router.navigate('home');
+        exitToHome();
         return;
       }
 
       const { flowName, currentBlockIndex, totalBlocks, currentBlock, nextBlock, secondsRemaining, isRunning } = status;
       const type = currentBlock.type;
+      const isLastBlock = currentBlockIndex === totalBlocks - 1;
 
       view.innerHTML = `
         <div class="pip-card ${type.toLowerCase()}">
@@ -108,18 +119,20 @@ export class ActiveTimerView {
       // Botón de retorno (vuelve a la app grande manteniendo el flujo)
     view.querySelector('#btn-return-big')?.addEventListener('click', async (e) => {
       e.stopPropagation();
-      this.destroy();
-      await TauriService.exitMiniMode();
-      router.navigate('home');
+      exitToHome();
+      //this.destroy();
+      //await TauriService.exitMiniMode();
+      //router.navigate('home');
     });
 
     // Botón de cierre directo (cancela el flujo de inmediato sin pedir confirmación)
     view.querySelector('#btn-close-session')?.addEventListener('click', async (e) => {
       e.stopPropagation();
       FlowRunnerService.stopFlow();
-      this.destroy();
-      await TauriService.exitMiniMode();
-      router.navigate('home');
+      exitToHome();
+      //this.destroy();
+      //await TauriService.exitMiniMode();
+      //router.navigate('home');
     });
     };
 

@@ -332,14 +332,31 @@ export class HomeView {
     });
 
     view.querySelectorAll('[data-play-id]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
-        if (id) {
-          router.navigate('active-timer', { flowId: id });
-        }
-      });
-    });
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
+    
+    if (FlowRunnerService.isBusy()) {
+      const status = FlowRunnerService.getStatus();
+      // Si intentas pulsar OTRO flujo diferente al que está corriendo, lo ignora
+      if (status && status.flow.id !== id) {
+        // Hace vibrar el widget de la esquina en vez de lanzar alertas
+        const corner = document.querySelector('#corner-running-widget');
+        corner?.classList.remove('corner-shake');
+        void (corner as HTMLElement)?.offsetWidth;
+        corner?.classList.add('corner-shake');
+        return;
+      }
+      // Si pulsas el MISMO flujo en ejecución, abre su widget
+      router.navigate('active-timer');
+      return;
+    }
+
+    if (id) {
+      router.navigate('active-timer', { flowId: id });
+    }
+  });
+});
     const btnLive = view.querySelector('#btn-start-live') as HTMLButtonElement;
     if (btnLive) {
       if (isBusy) {
@@ -356,12 +373,39 @@ export class HomeView {
     }
 
     // Iniciar flujo directamente al hacer clic en Play
+    // En src/views/HomeView.ts (dentro de bindEvents)
+
     view.querySelectorAll('[data-play-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).getAttribute('data-play-id');
-        if (id) {
-          router.navigate('active-timer', { flowId: id });
+        if (!id) return;
+
+        // 1. SI YA HAY UN FLUJO EN EJECUCIÓN
+        if (FlowRunnerService.isBusy()) {
+          const status = FlowRunnerService.getStatus();
+
+          // CASO A: Presiona un flujo DIFERENTE -> No hace nada y hace vibrar el widget de esquina
+          if (status && status.flow.id !== id) {
+            const corner = document.querySelector('#corner-running-widget');
+            if (corner) {
+              corner.classList.remove('corner-shake');
+              void (corner as HTMLElement).offsetWidth; // Reflow para reiniciar la animación
+              corner.classList.add('corner-shake');
+            }
+            return;
+          }
+
+          // CASO B: Presiona el MISMO flujo -> Abre la mini-ventana sin reiniciarlo
+          router.navigate('active-timer');
+          return;
+        }
+
+        // 2. SI NO HAY NINGÚN FLUJO CORRIENDO -> Lo arranca de inmediato y navega
+        const flow = StorageService.getFlows().find(f => f.id === id);
+        if (flow) {
+          FlowRunnerService.startFlow(flow);
+          router.navigate('active-timer');
         }
       });
     });
